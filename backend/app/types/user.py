@@ -7,7 +7,7 @@ class User(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     username: str = Field(unique=True, index=True)
-    password_hash: str | None = None
+    password_hash: str | None = Field(default=None, exclude=True)
     display_name: str | None = None
     school_grade: int = Field(default=7, ge=1, le=12)
     is_active: bool = True

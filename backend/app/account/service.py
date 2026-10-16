@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pwdlib import PasswordHash
+from pwdlib.exceptions import UnknownHashError
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
@@ -51,11 +52,19 @@ def login(session: Session, username: str, password: str) -> dict:
     user = session.exec(select(User).where(User.username == username.strip().lower())).first()
     if not user or not user.is_active or not user.password_hash:
         raise HTTPException(401, "Invalid credentials")
-    if not passwords.verify(password, user.password_hash):
+    try:
+        valid, updated_hash = passwords.verify_and_update(password, user.password_hash)
+    except UnknownHashError:
+        valid, updated_hash = False, None
+    if not valid:
         raise HTTPException(401, "Invalid credentials")
     secret = os.getenv("JWT_SECRET_KEY")
     if not secret:
         raise RuntimeError("JWT_SECRET_KEY must be set in .env")
+    if updated_hash is not None:
+        user.password_hash = updated_hash
+        session.add(user)
+        session.commit()
     token = jwt.encode({
         "sub": str(user.id),
         "exp": datetime.now(timezone.utc) + timedelta(hours=24),

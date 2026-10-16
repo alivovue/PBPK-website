@@ -10,6 +10,18 @@ Startup creates missing database tables and seeds the Godzilla character from th
 example. Existing character records are preserved. To initialize without starting
 the server, run `python -m database.database`.
 
+## Password storage
+
+Registration stores a randomly salted Argon2id hash in `users.password_hash`.
+Plaintext passwords and reversible password encryption are not stored. Login
+verifies the supplied password against that hash and upgrades outdated Argon2
+parameters after successful verification. Unsupported or malformed stored hashes
+are rejected with the same `401` response as incorrect credentials.
+
+Password hashes are excluded from user-model serialization and account API
+responses. Existing Argon2 hashes remain compatible; no database migration is
+needed.
+
 ## Character API
 
 | Method | Path | Authentication | Result |
