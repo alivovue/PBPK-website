@@ -1,5 +1,5 @@
 import {
-  Backpack, BookOpenText, Castle, ChevronDown, Coins, Crown, Gem,
+  Backpack, BookOpenText, Castle, ChevronDown, Coins, Crown,
   Menu, Shield, Sparkles, Swords, Trophy, UserRound, X,
 } from 'lucide-react'
 import { ProgressBar } from './UI.jsx'
@@ -13,7 +13,8 @@ const navItems = [
   { id: 'progression', label: 'Kultivasi', icon: Sparkles },
 ]
 
-export function TopBar({ onMenu }) {
+export function TopBar({ onMenu, onAccount, token, user, profile }) {
+  const name = user?.display_name || user?.username || (token ? 'Akunmu' : 'Masuk');
   return (
     <header className="topbar">
       <button className="mobile-menu" onClick={onMenu} aria-label="Buka navigasi"><Menu size={22} /></button>
@@ -24,10 +25,10 @@ export function TopBar({ onMenu }) {
       <div className="player-summary">
         <div className="player-rank">
           <div className="rank-crest"><Crown size={18} /></div>
-          <div><small>INTI CENDEKIA IV</small><ProgressBar value={68} tone="gold" label="2.720 / 4.000 EXP" /></div>
+          <div><small>{profile?.rank ?? (token ? 'PENANTANG' : 'PENANTANG TAMU')}</small>{profile && <ProgressBar value={Math.min(100, profile.total_exp / profile.next_level_at_exp * 100)} tone="gold" label={`${profile.total_exp.toLocaleString('id-ID')} / ${profile.next_level_at_exp.toLocaleString('id-ID')} EXP`} />}</div>
         </div>
-        <div className="wallet"><span><Coins size={17} /> 2.480</span><span><Gem size={16} /> 36</span></div>
-        <button className="profile-chip"><span className="avatar-token">RK</span><span className="profile-name">Raka</span><ChevronDown size={15} /></button>
+        {token && <div className="wallet"><span><Coins size={17} /> {profile ? profile.currency_balance.toLocaleString('id-ID') : '—'}</span></div>}
+        <button className="profile-chip" onClick={onAccount} aria-label={token ? 'Buka akun' : 'Masuk ke akun'}><span className="avatar-token">{token ? name.slice(0, 2).toUpperCase() : '?'}</span><span className="profile-name">{name}</span><ChevronDown size={15} /></button>
       </div>
     </header>
   )
@@ -43,16 +44,14 @@ export function SideNav({ current, onNavigate, open, onClose }) {
           {navItems.map(({ id, label, icon: Icon }) => (
             <button key={id} className={current === id ? 'nav-item active' : 'nav-item'} onClick={() => { onNavigate(id); onClose() }}>
               <span className="nav-icon"><Icon size={20} /></span><span>{label}</span>
-              {id === 'learn' && <i className="nav-dot" />}
             </button>
           ))}
         </nav>
         <div className="season-card">
-          <span className="season-label">MUSIM I</span>
+          <span className="season-label">FESTIVAL</span>
           <Shield size={27} />
           <strong>Konvergensi Awal</strong>
-          <small>Berakhir dalam 12 hari</small>
-          <ProgressBar value={57} tone="cyan" />
+          <small>Jelajahi dunia pengetahuan.</small>
         </div>
         <div className="version-stamp"><UserRound size={14} /> Prototipe v0.1</div>
       </aside>
