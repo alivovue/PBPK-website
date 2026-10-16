@@ -169,6 +169,7 @@ button.read-card:hover, .read-card.selected { background: #fff9e9; border-color:
 .account-close { position: absolute; top: 12px; right: 14px; }
 .account-dialog form, .account-dialog label { display: grid; gap: 10px; }
 .account-dialog form { gap: 18px; }
+.account-mode-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 .account-dialog label { font-size: 13px; }
 .account-dialog input { width: 100%; padding: 10px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); }
 @media (max-width: 900px) { .read-layout { grid-template-columns: 1fr; } .subject-list { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); } }

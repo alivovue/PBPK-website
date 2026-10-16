@@ -43,8 +43,10 @@ export function AccountDialog({ session, onClose }) {
       {mode === 'signup' && <><label>Nama tampilan<input name="display_name" autoComplete="name" disabled={pending} /></label><label>Kelas<input name="school_grade" type="number" min="1" max="12" defaultValue="7" required disabled={pending} /></label></>}
       <label>Kata sandi<input name="password" type="password" minLength="8" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required disabled={pending} /></label>
       {error && <p className="data-error" role="alert">{error}</p>}
-      <button className="primary-button wide" disabled={pending}>{pending ? 'Memeriksa akun…' : mode === 'signup' ? 'Buat akun & masuk' : 'Masuk'}</button>
-      <button type="button" className="text-button account-switch" disabled={pending} onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setError(''); }}>{mode === 'signup' ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar sekarang'}</button>
+      <div className="account-mode-actions">
+        <button className="primary-button" disabled={pending}>{pending ? 'Memeriksa akun…' : mode === 'signup' ? 'Buat akun' : 'Masuk'}</button>
+        <button type="button" className="secondary-button" disabled={pending} onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setError(''); }}>{mode === 'signup' ? 'Kembali ke Masuk' : 'Daftar'}</button>
+      </div>
     </form>}
   </dialog>;
 }
