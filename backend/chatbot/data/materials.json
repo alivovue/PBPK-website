@@ -1,0 +1,202 @@
+[
+  {
+    "page": 1,
+    "text": "IF3140 – Sistem Basis Data Performance Tuning SEMESTER I TAHUN AJARAN 2026/2027 Modified from Silberschatz’s slides, “Database System Concepts”, 7th ed. 1 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 2,
+    "text": "Sumber Silberschatz, Korth, Sudarshan: “Database System Concepts”, 7th Edition • Chapter 25: Performance Tuning & Performance Benchmark • Chapter 12.5: RAID • Chapter 14: Indexing 2 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 3,
+    "text": "Students are able to: • Explain factors which impact database performance • Describe several strategies to improve database performance Objectives • Know database design and hardware aspects that respectively affect database transaction efficiency and system performance • Know performance benchmarking 3 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 4,
+    "text": "Overview Index + Schema Tuning Query Tuning Outline Transaction Tuning Hardware Tuning Performance Benchmark 4 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 5,
+    "text": "Overview Database performance tuning can be defined as the optimization of resource use to increase throughput and minimize contention, enabling the largest possible workload to be processed 5 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 6,
+    "text": "6 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 7,
+    "text": "7 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 8,
+    "text": "Tuning Levels • Can tune a database system at 3 levels: • Higher level database design, E.g., Physical schema (indices, materialized view, horizontal splitting), queries, transactions, and logical schema • Database system parameters E.g., Set buffer size to minimize disk I/O, set checkpointing intervals to limit log size. • Hardware E.g., Add disks to speed up I/O, add memory to increase buffer hits, move to a faster processor. 8 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 9,
+    "text": "Overview – File Organization Database performance tuning is generally targeted to minimize disk I/O since it dominates Typical important constants HDD SSD the potential Sector (HDD) /cell (SSD) size 512 B 2 B bottleneck Block / pages size 4 KB 4 KB Random block read time 10 ms 0.1 ms (disk I/O) Block access time:5-20ms Block transfer time: 0.1ms * Block access time in memory = ~100 ns (nano) 9 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 10,
+    "text": "Overview • After ER design, schema refinement, and the definition of views, we have the conceptual schema for our database. • The next step is to: (1) choose indices, (2) make clustering decisions, and (3) to refine the schemas (if necessary), to meet performance goals. • We must begin by understanding the workload: The most important queries and how often they arise. • The most important updates and how often they arise. • The desired performance for these queries and updates. • 10 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 11,
+    "text": "Understanding the Workload • For each query in the workload: • Which relations does it access? • Which attributes are retrieved? • Which attributes are involved in selection/join conditions? How selective are these conditions likely to be? • For each update in the workload: • Which attributes are involved in selection/join conditions? How selective are these conditions likely to be? • The type of update (INSERT/DELETE/UPDATE), and the attributes that are affected. 11 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 12,
+    "text": "Decisions to Make • What indices should we create? Which relations should have indices? What attribute(s) should be the • search key? Should we build several indices? • For each index, what kind of an index should it be? Clustered? Hash/tree? Dynamic/static? Dense/sparse? • • Should we make changes to the logical schema? Consider alternative normalized schemas? (Remember, there are • many choices in decomposing into BCNF, etc.) Should we “undo” some decomposition steps and settle for a lower • normal form? (Denormalization) Horizontal partitioning, views, etc. • 12 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 13,
+    "text": "Indexing dan Index Tuning 13 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 14,
+    "text": "Index • Index → used to speed up access to desired data. • E.g., author catalog in library • Search Key - attribute or set of attributes used to look up records in a file. • An index file consists of records (called index entries) of the form search-key pointer 14 IF3140/II2250 - Manajemen Basisdata"
+  },
+  {
+    "page": 15,
+    "text": "Index • An index is a data structure that supports efficient access to data • It facilitates searching, sorting, join operation, etc., efficiently instead of scanning all table rows • Index files are typically much smaller than the original file Matching Condition records on index Set of attribute Records value (search key) 15 IF3140/II2250 - Manajemen Basisdata"
+  },
+  {
+    "page": 16,
+    "text": "Schema Tuning 16 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 17,
+    "text": "Schema Tuning (1) • Choice of logical schema should be guided by workload, in addition to redundancy issues: • We might consider horizontal decompositions. • We might consider vertical decompositions. • We may settle for a 3NF schema rather than BCNF. • Workload may influence choice we make in decomposing a relation into 3NF or BCNF. • We may further decompose a BCNF schema! • We might denormalize (i.e., undo a decomposition step), or we might add fields to a relation. • If such changes are made after a database in use, called schema evolution; might mask changes by defining views 25/08/2026 Schema Tuning 17"
+  },
+  {
+    "page": 18,
+    "text": "Schema Tuning (2) • Can be done in several ways: • Splitting tables • Sometimes splitting normalized tables can improve performance • Can split tables in two ways: (1) Horizontally; (2) Vertically • Add complexity to the applications • Denormalization • Adding redundant columns • Adding derived attributes • Collapsing tables • Duplicating tables 25/08/2026 Schema Tuning 18"
+  },
+  {
+    "page": 19,
+    "text": "Query Tuning 19 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 20,
+    "text": "Tuning of Queries: Query Plan • Optimizer might not choose best plan • Most DBMS support EXPLAIN command to see what plan is being used • Makes decisions based on existing statistics • Statistics may be old • There is also ANALYZE command to re-compute the statistics • Complex query containing nested subqueries are not optimized very well by many optimizers. The query can be re-write using join (decorrelation technique –see chapter 16.4.4 –) • Optimizer hints: special instructions for the optimizer embedded in the SQL command text Note: Rewriting query becomes less relevant since optimizers goes better 20 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 21,
+    "text": "21 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 22,
+    "text": "Tuning of Queries: Set Orientation • In an application program, it is often that a query is executed frequently, but with different values for a parameter. • Set orientation → performing fewer calls to database Instead of this → use this 22 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 23,
+    "text": "Transaction Tuning 23 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 24,
+    "text": "Tuning of Transactions • Long transactions (typically read-only) that examine large parts of a relation result in lock contention with update transactions • E.g. large query to compute bank statistics and regular bank transactions • To reduce contention without lock • Use multi-version concurrency control • E.g. Oracle “snapshots” which support multi-version 2PL • Use degree-two consistency (cursor-stability) for long transactions • Drawback: result may be approximate 24 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 25,
+    "text": "Tuning of Transactions (Cont.) • Long update transactions cause several problems • Exhaust lock space • Exhaust log space • and also greatly increase recovery time after a crash, and may even exhaust log space during recovery if recovery algorithm is badly designed! • Use mini-batch transactions to limit number of updates that a single transaction can carry out. • Split large transaction into batch of “mini-transactions”, each performing part of the updates • In case of failure during a mini-batch, must complete its remaining portion on recovery, to ensure atomicity. 25 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 26,
+    "text": "Hardware Tuning 26 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 27,
+    "text": "Tuning of Hardware • Even well-tuned transactions typically require a few I/O operations • Typical disk supports about 100 random I/O operations per second • Suppose each transaction requires just 2 random I/O operations. Then to support n transactions per second, we need to stripe data across n/50 disks (ignoring skew) • Number of I/O operations per transaction can be reduced by keeping more data in memory • If all data is in memory, I/O needed only for writes • Keeping frequently used data in memory reduces disk accesses, reducing number of disks required, but has a memory cost 27 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 28,
+    "text": "Hardware Tuning: Which Data to Keep in Memory? • Economic consideration is popularly used to answer question above, which is finding the break even point between disk access cost and memory cost. • Disk access cost • If a block is accessed once in m second, then: 𝒑𝒓𝒊𝒄𝒆 𝒑𝒆𝒓 𝒅𝒊𝒔𝒌 𝒅𝒊𝒔𝒌 𝒂𝒄𝒄𝒆𝒔𝒔 𝒄𝒐𝒔𝒕 = 𝒏𝒖𝒎𝒃𝒆𝒓 𝒐𝒇 𝒂𝒄𝒄𝒆𝒔𝒔 𝒑𝒆𝒓 𝒔𝒆𝒄𝒐𝒏𝒅 ×𝒎 • Memory cost by keeping a block of data 𝒑𝒓𝒊𝒄𝒆 𝒑𝒆𝒓 𝑴𝑩 𝒐𝒇 𝒎𝒆𝒎𝒐𝒓𝒚 𝒎𝒆𝒎𝒐𝒓𝒚 𝒄𝒐𝒔𝒕 = 𝒏𝒖𝒎𝒃𝒆𝒓 𝒐𝒇 𝒃𝒍𝒐𝒄𝒌𝒔 𝒑𝒆𝒓 𝑴𝑩 28 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 29,
+    "text": "Hardware Tuning: Which Data to Keep in Memory? • In 1987, price per disk = $30,000 with 15 random access/s, while price per 1MB memory = $5,000 with block size = 1KB. • Suppose we have blocks of data that are accessed once per 2 seconds, then: 𝑝𝑟𝑖𝑐𝑒 𝑝𝑒𝑟 𝑑𝑖𝑠𝑘 $30,000 • 𝒅𝒊𝒔𝒌 𝒂𝒄𝒄𝒆𝒔𝒔 𝒄𝒐𝒔𝒕 = = = 𝑛𝑢𝑚𝑏𝑒𝑟 𝑜𝑓 𝑎𝑐𝑐𝑒𝑠𝑠 𝑝𝑒𝑟 𝑠𝑒𝑐𝑜𝑛𝑑 ×𝑚 15 𝑎𝑐𝑐𝑒𝑠𝑠/𝑠 ×2𝑠 $1,000 𝑝𝑒𝑟 𝑏𝑙𝑜𝑐𝑘 𝑎𝑐𝑐𝑒𝑠𝑠 𝑝𝑟𝑖𝑐𝑒 𝑝𝑒𝑟 𝑀𝐵 𝑜𝑓 𝑚𝑒𝑚𝑜𝑟𝑦 $5,000 • 𝒎𝒆𝒎𝒐𝒓𝒚 𝒄𝒐𝒔𝒕 = = = $5 𝑝𝑒𝑟 𝑏𝑙𝑜𝑐𝑘 𝑛𝑢𝑚𝑏𝑒𝑟 𝑜𝑓 𝑏𝑙𝑜𝑐𝑘𝑠 𝑝𝑒𝑟 𝑀𝐵 1,000 𝑏𝑙𝑜𝑐𝑘𝑠 • Buffering this data: • Needs $5 memory cost, reduces $1,000 disk access cost → WORTH!"
+  },
+  {
+    "page": 29,
+    "text": "• To find the break even point of m, thus: 𝑝𝑟𝑖𝑐𝑒 𝑝𝑒𝑟 𝑑𝑖𝑠𝑘 𝑛𝑢𝑚𝑏. 𝑏𝑙𝑜𝑐𝑘𝑠 𝑝𝑒𝑟 𝑀𝐵 30,000 1,000 𝒎 = × = × = 400 𝑠 ≈ 5 𝑚𝑖𝑛𝑠. 𝑝𝑟𝑖𝑐𝑒 𝑝𝑒𝑟 𝑀𝐵 𝑚𝑒𝑚𝑜𝑟𝑦 𝑛𝑢𝑚𝑏. 𝑑𝑖𝑠𝑘 𝑎𝑐𝑒𝑠𝑠 5,000 15 Thus, in that time, data accessed every 400s or less is worth to buffer in the memory → buy more memory! 29 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 30,
+    "text": "Hardware Tuning: Five-Minute Rule • Using formula and data table below, we can get m from time to time: 𝑝𝑟𝑖𝑐𝑒 𝑝𝑒𝑟 𝑑𝑖𝑠𝑘 𝑛𝑢𝑚𝑏. 𝑏𝑙𝑜𝑐𝑘𝑠 𝑝𝑒𝑟 𝑀𝐵 𝒎 = × 𝑝𝑟𝑖𝑐𝑒 𝑝𝑒𝑟 𝑀𝐵 𝑚𝑒𝑚𝑜𝑟𝑦 𝑛𝑢𝑚𝑏. 𝑑𝑖𝑠𝑘 𝑎𝑐𝑒𝑠𝑠 Source: Appuswamy, et. all. \"The five minute rule thirty years later....\" 2017. In 1987, m = 400s ≈ 5 minutes → five minute rule! 30 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 31,
+    "text": "Hardware Tuning: One-Minute Rule • Prices of disk and memory have changed greatly over the years, but the ratios have not changed much from 1987 to 1997, so during this period: • Rules remain as 5 minute, not 1 hour or 1 second rules (for random access) • But rules change after that period of time, e.g., in 2007 and 2017 which are 1.5 hours and 4 hours rules! • For sequentially accessed data, more blocks can be read per second. Assuming sequential reads of 1MB of data at a time: 1-minute rule: sequentially accessed data that is accessed once or more in a minute should be kept in memory 31 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 32,
+    "text": "Hardware Tuning: RAID • Redundant Array of Independent Disc (RAID): • Disk organization techniques that manage a large numbers of disks, providing a view of a single disk of • high capacity and high speed by using multiple disks in parallel, • high reliability by storing data redundantly, so that data can be recovered even if a disk fails • Stripping – strip data across multiple disk to increase transfer rate (bit-level stripping and block level stripping) • Redundancy – store extra information that can be used to rebuild information lost in a disk failure 32 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 33,
+    "text": "Hardware Tuning: RAID 0 • Benefit: • Strip the data across Incoming data multiple disk → fast read • Drawback: • No fault tolerance → if a disk fails, the data is lost Source: PowerCert 33 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 34,
+    "text": "Hardware Tuning: RAID 1 • Benefit: • Copy (mirror) the data Incoming across multiple disk → fault data tolerant • Relatively easy to rebuild E.g.: using 2 disks upon the failure • Drawback: • Need more disk to store the data • E.g., for 1 data copy, only 50% disk for the actual data Source: PowerCert 34 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 35,
+    "text": "Hardware Tuning: RAID 5 • Benefit: • Store 1 parity data → fault tolerant up to 1 failure Incoming data • Drawback: • Need more disk to store E.g.: using 4 disks Source: PowerCert the data • E.g., for 4 disks setup, only 75% disk for the actual data • More cost to write, and rebuild upon failure • Raid 6: Similar to raid 5, but store more redundancies E.g.: using even parity D1, D2, D3, D4 = 0,1,1,0. Any disk failure, we still can recover. 35 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 36,
+    "text": "Hardware Tuning: RAID 10 • Benefit: • Combine raid 0 (stripping) and raid 1 (redundancy) Incoming data → fast read and fault tolerance E.g.: using 4 disks Source: PowerCert • Drawback: • Need more disk (at least 4) to store the data • E.g., for 4 disks setup, only 50% disk for the actual data Note: Raid 2, 3, 4 are not used in practice anymore. 36 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 37,
+    "text": "Hardware Tuning: Choice of RAID Level • To use RAID 1 or RAID 5? • Depends on ratio of reads and writes • RAID 5 requires 2 block reads and 2 block writes to write out one data block, meanwhile RAID 1 only needs 2 block writes • If an application requires r reads and w writes per second • RAID 1 requires r + 2w I/O operations per second • RAID 5 requires r + 4w I/O operations per second • For reasonably large r and w, this requires lots of disks to handle workload • RAID 5 may require more disks than RAID 1 to handle load!"
+  },
+  {
+    "page": 37,
+    "text": "• Apparent saving of number of disks by RAID 5 (by using parity, as opposed to the mirroring done by RAID 1) may be illusory! • Rule of Thumb: RAID 5 is fine when writes are rare and data is very large, but RAID 1 is preferable otherwise 37 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 38,
+    "text": "Performance Simulation • Performance simulation using queuing model useful to predict bottlenecks as well as the effects of tuning changes, even without access to real system • Simulation model is quite detailed, but usually omits some low level details • Model service time, but disregard details of service • E.g. approximate disk read time by using an average disk read time • Experiments can be run on model, and provide an estimate of measures such as average throughput/response time • Parameters can be tuned in model and then replicated in real system • E.g. number of disks, memory, algorithms, etc. 38 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 39,
+    "text": "Performance Benchmark 39 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 40,
+    "text": "Performance Benchmarks • Suites of tasks used to quantify the performance of software systems • Important in comparing database systems, especially as systems become more standards compliant. • Commonly used performance measures: • Throughput (transactions per second, or tps) • Response time (delay from submission of transaction to return of result) • Availability or mean time to failure 40 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 41,
+    "text": "Performance Benchmarks (Cont.) • Beware when computing average throughput of different transaction types • E.g., suppose a system runs transaction type A at 99 tps and transaction type B at 1 tps. • Given an equal mixture of types A and B, throughput is not (99+1)/2 = 50 tps. • Running one transaction of each type takes time 0.01+1=1.01 seconds, giving a throughput of 1.98 tps. • To compute average throughput of 𝒏 transactions with tps of 𝒕 , use 𝒊 harmonic mean: 𝒏 𝟏/𝒕 +𝟏/𝒕 +⋯+𝟏/𝒕 𝟏 𝟐 𝒏 • Interference (e.g. lock contention) makes even this incorrect if different transaction types run concurrently 41 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 42,
+    "text": "Database Application Classes • Online transaction processing (OLTP) • requires high concurrency and clever techniques to speed up commit processing, to support a high rate of update transactions. • Decision support applications • including online analytical processing, or OLAP applications • require good query evaluation algorithms and query optimization. • Architecture of some database systems tuned to one of the two classes • E.g. Teradata is tuned to decision support • Others try to balance the two requirements • E.g. Oracle, with snapshot support for long read-only transaction 42 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 43,
+    "text": "Benchmarks Suites • The Transaction Processing Council (TPC) benchmark suites are widely used. • TPC-A and TPC-B: simple OLTP application modeling a bank teller application with and without communication • Not used anymore • TPC-C: complex OLTP application modeling an inventory system • Current standard for OLTP benchmarking 43 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 44,
+    "text": "Benchmarks Suites (Cont.) • TPC benchmarks (cont.) • TPC-D: complex decision support application with 17 queries • Refined by TPC-H and TPC-R • TPC-H: (H for ad hoc) based on TPC-D with some extra queries • Models ad hoc queries which are not known beforehand • Total of 22 queries with emphasis on aggregation • prohibits materialized views • permits indices only on primary and foreign keys • TPC-R: (R for reporting) same as TPC-H, but without any restrictions on materialized views and indices"
+  },
+  {
+    "page": 44,
+    "text": "• TPC-W: (W for Web) End-to-end Web service benchmark modeling a Web bookstore, with combination of static and dynamically generated pages 44 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 45,
+    "text": "TPC Performance Measures • TPC performance measures • transactions-per-second with specified constraints on response time • transactions-per-second-per-dollar accounts for cost of owning system • TPC benchmark requires database sizes to be scaled up with increasing transactions-per-second • reflects real world applications where more customers means more database size and more transactions-per-second • External audit is mandatory to claim TPC performance numbers • TPC performance claims can be trusted 45 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 46,
+    "text": "TPC Performance Measures • Two types of tests for TPC-H and TPC-R • Power test: runs queries and updates sequentially, then takes mean to find queries per hour • Throughput test: runs queries and updates concurrently • multiple streams running in parallel each generates 22 queries, with one parallel update stream • Composite query per hour metric: square root of product of power and throughput metrics • Composite price/performance metric: dividing the system price by the metric 46 IF3140 - Sistem Basis Data"
+  },
+  {
+    "page": 47,
+    "text": "End of Chapter 47 IF3140 - Sistem Basis Data"
+  }
+]

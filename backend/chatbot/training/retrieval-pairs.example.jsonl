@@ -1,0 +1,2 @@
+{"query":"Apa fungsi index database?","positive":"Index mendukung akses efisien ke record melalui search key.","negative":"Transaksi adalah satu unit kerja logis pada database."}
+{"query":"Kenapa pencarian dengan index bisa lebih cepat?","positive":"Index membantu menemukan record tanpa memindai seluruh baris tabel.","negative":"RAID menggabungkan beberapa disk untuk kapasitas atau redundansi."}

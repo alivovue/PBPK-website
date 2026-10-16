@@ -1,0 +1,2 @@
+sentence-transformers>=3.0,<6
+datasets>=2.18,<5
