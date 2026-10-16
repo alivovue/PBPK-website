@@ -1,6 +1,26 @@
 # Backend
 
-Run commands from `backend/` with the backend virtual environment activated:
+Use Python 3.10+ and run commands from `backend/`. For a fresh installation:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+`requirements.txt` contains the API's runtime dependencies: FastAPI, Uvicorn,
+WebSocket support, SQLModel/SQLAlchemy, Pydantic, JWT authentication, Argon2 password
+hashing, and dotenv configuration. Required transitive packages are installed
+automatically. SQLite and the unittest test runner are included with Python;
+ROS packages are not needed.
+
+If your environment was installed from the old requirements, use a new virtual
+environment to avoid retaining those unrelated packages.
+If your terminal sources ROS, it may also expose ROS packages through `PYTHONPATH`
+even inside a virtual environment. Use a clean terminal or run `unset PYTHONPATH`
+in that terminal before installing and running this backend.
+
+Start the server with the backend virtual environment activated:
 
 ```bash
 uvicorn app.main:app --reload
