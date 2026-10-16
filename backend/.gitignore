@@ -13,11 +13,8 @@ venv/
 !.env.example
 chatbot/models/
 
-# SQLite database
-database/data/*.db
+# SQLite journal and WAL files
 database/data/*.db-*
-database/data/*.sqlite
-database/data/*.sqlite3
 
 # IDE / Editor
 .vscode/
