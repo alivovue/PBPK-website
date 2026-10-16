@@ -7,8 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from database.database import init_db
 from app.routers import (
     account, player, characters, learning, mastery, progression,
-    leaderboard, exam, competition, heart_demon,
+    leaderboard, exam, competition, heart_demon, multiplayer,
 )
+from app.logic.multiplayer.service import MultiplayerService
 
 load_dotenv()
 
@@ -16,10 +17,15 @@ load_dotenv()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    yield
+    app.state.multiplayer = MultiplayerService()
+    await app.state.multiplayer.start()
+    try:
+        yield
+    finally:
+        await app.state.multiplayer.stop()
 
 
-app = FastAPI(title="Cultivation Learning API", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="Cultivation Learning API", version="0.3.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(","),
@@ -29,7 +35,7 @@ app.add_middleware(
 )
 
 for module in (account, player, characters, learning, mastery, progression,
-               leaderboard, exam, competition, heart_demon):
+               leaderboard, exam, competition, heart_demon, multiplayer):
     app.include_router(module.router, prefix="/api/v1")
 
 

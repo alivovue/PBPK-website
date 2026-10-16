@@ -66,6 +66,17 @@ exposed as public API actions.
 
 Interactive API documentation is available at `/docs`.
 
+## Multiplayer battles
+
+The real-time 1v1 engine and services live in `app/logic/multiplayer/`. HTTP room
+commands and the WebSocket state stream are exposed under `/api/v1/multiplayer`.
+See [the multiplayer API guide](app/logic/multiplayer/README.md) for room setup,
+authentication, gameplay commands, synchronization, and results.
+
+Run one backend worker: live rooms are in memory. Starting a match requires ten
+valid four-option questions in the existing database. Frontend changes are not
+required for the backend implementation.
+
 ## Tests
 
 Install the development dependencies and run:
@@ -75,4 +86,4 @@ pip install -r requirements-dev.txt
 python -m unittest discover -s tests -v
 ```
 
-Character tests use a temporary SQLite database and leave local player data intact.
+Tests use temporary SQLite databases and leave local player data intact.
