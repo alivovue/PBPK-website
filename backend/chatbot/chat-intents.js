@@ -46,7 +46,7 @@ function editDistanceAtMostOne(left, right) {
 }
 
 const GREETINGS = ['halo', 'hai', 'hei', 'hi', 'hello', 'hey', 'hiya', 'helo', 'pagi', 'siang', 'sore', 'malam', 'yo', 'oy', 'assalamualaikum'];
-const GREETING_FILLERS = new Set(['system', 'kak', 'min', 'dong', 'ya', 'nih', 'cuy', 'bro', 'guys']);
+const GREETING_FILLERS = new Set(['system', 'auri', 'kak', 'min', 'dong', 'ya', 'nih', 'cuy', 'bro', 'guys']);
 
 function isGreetingWord(word) {
   const compact = word.replace(/(.)\1+/gu, '$1');

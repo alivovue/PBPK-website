@@ -10,6 +10,8 @@ venv/
 # Environment variables
 .env
 .env.*
+!.env.example
+chatbot/models/
 
 # SQLite database
 database/data/*.db

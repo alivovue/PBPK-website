@@ -1,8 +1,8 @@
 const { normalize } = require('./chat-intents');
 
 const SOCIAL_REPLIES = {
-  greeting: 'Hai! Aku System, teman belajarmu 😊 Kita bisa bahas indeks, query, transaksi, RAID, atau benchmark dari modul ini. Kamu mau mulai dari mana?',
-  identity: 'Aku System, asisten belajar di ruang ini. Aku bisa bantu mencari sumber dari modul dan menjelaskan beberapa konsep dengan ringkasan belajar.',
+  greeting: 'Hai! Aku AURI, teman belajarmu 😊 Tanyakan materi pelajaran yang sedang kamu buka, atau bahas indeks, query, transaksi, RAID, dan benchmark dari modul yang tersedia.',
+  identity: 'Aku AURI, asisten belajar di Grand Convergence. Aku bisa bantu mencari sumber dari materi dan menjelaskan beberapa konsep dengan ringkasan belajar.',
   capabilities: 'Aku bisa ngobrol ringan, mencari bagian modul, memberi penjelasan ringkas untuk topik yang didukung, dan membantu kamu lanjut dari pertanyaan sebelumnya. Coba tanya “apa itu index database?”',
   smalltalk: 'Wkwk, siap nemenin 😄 Mau lanjut belajar atau istirahat sebentar?',
   thanks: 'Sama-sama! Kalau masih ada bagian yang membingungkan, kirim istilah atau pertanyaannya ya 😊',
@@ -35,21 +35,23 @@ const EXPLANATIONS = [
   },
 ];
 
-function buildTemplateReply({ question, intent, sources = [] }) {
+function buildTemplateReply({ question, intent, sources = [], lessonContext = false }) {
   if (SOCIAL_REPLIES[intent]) return SOCIAL_REPLIES[intent];
   if (!sources.length) {
+    if (lessonContext) return 'Aku belum menemukan bagian pelajaran yang cukup sesuai untuk menjawab pertanyaan itu. Coba sebutkan istilah yang ada di materi, atau tanyakan bagian yang ingin kamu pahami.';
     return 'Aku belum menemukan kutipan modul yang cukup untuk menjelaskan topik itu dengan yakin. Coba sebutkan istilah yang lebih spesifik, misalnya index, query, transaksi, RAID, atau benchmark.';
   }
 
   const normalizedQuestion = normalize(question);
-  const explanation = EXPLANATIONS.find((item) => item.test.test(normalizedQuestion));
+  const explanation = lessonContext ? null : EXPLANATIONS.find((item) => item.test.test(normalizedQuestion));
   const page = sources[0].page;
+  const location = sources[0].lesson_id ? `pelajaran “${sources[0].title}”` : `halaman ${page}`;
   if (explanation) {
     return `${explanation.text}\n\nRingkasan belajar berdasarkan materi yang ditemukan di halaman ${page}. Bagian mana yang mau dibahas lebih dalam?`;
   }
 
   const excerpt = String(sources[0].text || '').trim();
-  return `Aku menemukan bagian yang berkaitan di halaman ${page}. Intinya, materi ini membahas:\n\n“${excerpt}”\n\nAku belum punya ringkasan khusus untuk subtopik ini. Istilah mana yang paling membingungkan?`;
+  return `Aku menemukan bagian yang berkaitan di ${location}:\n\n“${excerpt}”\n\nIstilah atau bagian mana yang ingin kamu bahas lebih lanjut?`;
 }
 
 module.exports = { buildTemplateReply };

@@ -9,3 +9,4 @@ from . import exam
 from . import competition
 
 from . import competition_result
+from app.system_ai import models as ai_models

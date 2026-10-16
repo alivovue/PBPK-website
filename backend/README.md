@@ -98,6 +98,18 @@ exposed as public API actions.
 
 Interactive API documentation is available at `/docs`.
 
+## AURI chatbot
+
+The AI service is implemented in `app/system_ai/` and exposed through
+`/api/v1/system-ai`. It connects the supplied IndoBERT chatbot to authenticated,
+saved conversations and lesson/topic help. The frontend uses these routes for
+the AURI panel and learning assistance.
+
+Install `requirements-ai.txt` for local model inference and use Node.js 22.12+.
+See [the AURI setup and API guide](app/system_ai/README.md) for CPU installation,
+model configuration, worker startup, endpoints, and verification. Plain
+`requirements.txt` remains sufficient when the model runs in a separate service.
+
 ## Multiplayer battles
 
 The real-time 1v1 engine and services live in `app/logic/multiplayer/`. HTTP room

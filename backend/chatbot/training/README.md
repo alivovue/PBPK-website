@@ -34,7 +34,7 @@ Uji hasil di terminal baru tanpa mengubah default model:
 
 ```powershell
 $env:INDOBERT_MODEL = (Resolve-Path backend\chatbot\models\indobert-demo-01).Path
-node backend\server.js
+python -m uvicorn app.main:app --app-dir backend
 ```
 
 Bandingkan retrieval pada golden set dari terminal lain, pastikan jawabannya tidak lebih buruk, baru putuskan apakah nama model di konfigurasi lokal akan diganti. Jangan commit file bobot; folder `backend/chatbot/models/` di-ignore. Simpan skrip, data berlabel yang boleh dibagikan, metrik, dan versi dependency agar eksperimen bisa diulang.

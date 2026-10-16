@@ -9,12 +9,12 @@ function record(name, passed, detail = '') {
   process.stdout.write(`${passed ? 'PASS' : 'FAIL'} ${name}${detail ? ` — ${detail}` : ''}\n`);
 }
 
-for (const file of ['backend/server.js', 'backend/chatbot/server.js', 'backend/chatbot/template-responder.js', 'backend/chatbot/tfidf-retriever.js', 'backend/chatbot/hybrid-retriever.js', 'backend/chatbot/followup.js', 'backend/chatbot/chat-intents.js', 'frontend/app.js', 'backend/chatbot/tests/evaluate-retrieval.js']) {
+for (const file of ['backend/chatbot/server.js', 'backend/chatbot/chatbot.js', 'backend/chatbot/template-responder.js', 'backend/chatbot/tfidf-retriever.js', 'backend/chatbot/hybrid-retriever.js', 'backend/chatbot/followup.js', 'backend/chatbot/chat-intents.js', 'backend/chatbot/tests/evaluate-retrieval.js']) {
   const result = spawnSync(process.execPath, ['--check', file], { cwd: root, encoding: 'utf8' });
   record(`Syntax ${file}`, result.status === 0, (result.stderr || result.stdout).trim());
 }
 
-const runtimeFiles = ['backend/server.js', 'backend/chatbot/server.js', 'frontend/app.js', 'frontend/index.html'];
+const runtimeFiles = ['backend/chatbot/server.js', 'backend/chatbot/chatbot.js', 'frontend/src/components/AuriChat.jsx', 'frontend/index.html'];
 const runtimeText = runtimeFiles.map((file) => fs.readFileSync(path.join(root, file), 'utf8')).join('\n');
 record('No generative model dependency in runtime', !/gemini|gemma|ollama|GEMINI_API_KEY|generativelanguage\.googleapis\.com/i.test(runtimeText));
 record('No provider switch in frontend', !/data-provider|mode-tabs|tab-gemini/i.test(runtimeText));
@@ -29,6 +29,7 @@ const goldenValid = goldenSet.questions.length === 30
 record('Golden set integrity (30 unique questions/pages)', goldenValid);
 
 for (const [name, file] of [
+  ['Integrated chatbot tests', 'chatbot.test.js'],
   ['Hybrid rank fusion unit tests', 'hybrid-retriever.test.js'],
   ['Contextual follow-up unit tests', 'followup.test.js'],
   ['Greeting and chat intent unit tests', 'chat-intents.test.js'],

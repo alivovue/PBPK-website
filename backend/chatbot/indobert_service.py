@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import json
 import os
+from functools import lru_cache
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import Lock
 
 import numpy as np
 import torch
@@ -17,7 +19,7 @@ DATA_FILE = HERE / "data" / "materials.json"
 MODEL_NAME = os.environ.get("INDOBERT_MODEL", "quarkss/indobert-base-stsb")
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("INDOBERT_PORT", "3010"))
-MAX_BODY = 8_000
+MAX_BODY = 256_000
 TOP_K = 10  # Candidate pool for local hybrid rank fusion; UI still receives three sources.
 QUERY_TRANSLATIONS = {
     "raid 1": "mirroring copy data across disks fault tolerant failure rebuild",
@@ -56,17 +58,28 @@ print(f"Loading IndoBERT sentence-embedding model: {MODEL_NAME}", flush=True)
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModel.from_pretrained(MODEL_NAME)
 model.eval()
+torch.set_num_threads(max(1, int(os.environ.get("INDOBERT_THREADS", min(4, os.cpu_count() or 1)))))
+inference_lock = Lock()
 MAX_LENGTH = min(512, int(getattr(model.config, "max_position_embeddings", 512)))
 
 
 def encode(texts: list[str]) -> np.ndarray:
-    inputs = tokenizer(texts, padding=True, truncation=True, max_length=MAX_LENGTH, return_tensors="pt")
-    with torch.inference_mode():
-        token_embeddings = model(**inputs).last_hidden_state
-        mask = inputs["attention_mask"].unsqueeze(-1).expand(token_embeddings.size()).float()
-        pooled = torch.sum(token_embeddings * mask, dim=1) / torch.clamp(mask.sum(dim=1), min=1e-9)
-        pooled = torch.nn.functional.normalize(pooled, p=2, dim=1)
-    return pooled.cpu().numpy()
+    batches = []
+    for offset in range(0, len(texts), 8):
+        inputs = tokenizer(texts[offset:offset + 8], padding=True, truncation=True,
+                           max_length=MAX_LENGTH, return_tensors="pt")
+        with torch.inference_mode():
+            token_embeddings = model(**inputs).last_hidden_state
+            mask = inputs["attention_mask"].unsqueeze(-1).expand(token_embeddings.size()).float()
+            pooled = torch.sum(token_embeddings * mask, dim=1) / torch.clamp(mask.sum(dim=1), min=1e-9)
+            pooled = torch.nn.functional.normalize(pooled, p=2, dim=1)
+        batches.append(pooled.cpu().numpy())
+    return np.concatenate(batches)
+
+
+@lru_cache(maxsize=8)
+def contextual_embeddings(texts: tuple[str, ...]) -> np.ndarray:
+    return encode(list(texts))
 
 
 print(f"Embedding {len(chunks)} material chunks on startup...", flush=True)
@@ -100,6 +113,14 @@ class Handler(BaseHTTPRequestHandler):
             question = payload.get("message", "")
             if not isinstance(question, str) or not question.strip() or len(question) > 1_000:
                 return self._json(400, {"error": "Invalid question"})
+            documents = payload.get("documents")
+            if documents is not None and (not isinstance(documents, list) or len(documents) > 32
+                    or any(not isinstance(item, dict) or not isinstance(item.get("text"), str)
+                           or not item["text"].strip() or len(item["text"]) > 1600 for item in documents)):
+                return self._json(400, {"error": "Invalid lesson documents"})
+            candidates = chunks if documents is None else documents
+            if not candidates:
+                return self._json(200, {"model": MODEL_NAME, "matches": []})
             original_query = question.strip()
             translated_query = original_query.lower()
             for source in sorted(QUERY_TRANSLATIONS, key=len, reverse=True):
@@ -107,14 +128,17 @@ class Handler(BaseHTTPRequestHandler):
             query_variants = [original_query]
             if translated_query != original_query.lower():
                 query_variants.append(translated_query)
-            query_embeddings = encode(query_variants)
-            scores = (document_embeddings @ query_embeddings.T).max(axis=1)
+            with inference_lock:
+                embeddings = document_embeddings if documents is None else contextual_embeddings(
+                    tuple(f"{item.get('title', '')}\n{item['text']}" for item in documents))
+                query_embeddings = encode(query_variants)
+                scores = (embeddings @ query_embeddings.T).max(axis=1)
             if "raid 1" in original_query.lower():
-                scores += np.array([0.12 if "raid 1" in chunk["text"].lower() else 0.0 for chunk in chunks])
+                scores += np.array([0.12 if "raid 1" in chunk["text"].lower() else 0.0 for chunk in candidates])
             best_indices = np.argsort(scores)[::-1][:TOP_K]
             matches = [
-                {"page": chunks[index]["page"], "text": chunks[index]["text"],
-                 "score": round(float(scores[index]), 4)}
+                {**{key: candidates[index][key] for key in ("page", "text", "title", "lesson_id", "topic_id")
+                    if key in candidates[index]}, "score": round(float(np.clip(scores[index], -1, 1)), 4)}
                 for index in best_indices
             ]
             return self._json(200, {"model": MODEL_NAME, "matches": matches})
@@ -128,4 +152,10 @@ class Handler(BaseHTTPRequestHandler):
         return
 
 
-ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()
+server = ThreadingHTTPServer((HOST, PORT), Handler)
+try:
+    server.serve_forever()
+except KeyboardInterrupt:
+    pass
+finally:
+    server.server_close()

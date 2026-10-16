@@ -1,0 +1,4 @@
+# API plus the local IndoBERT runtime. Install a CPU-only torch wheel first
+# if you do not need CUDA (see app/system_ai/README.md).
+-r requirements.txt
+-r chatbot/requirements-indobert.txt
