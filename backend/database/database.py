@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sqlalchemy import event
+from sqlalchemy import event, text
 from sqlmodel import SQLModel, Session, create_engine
 
 # Database directory
@@ -33,6 +33,12 @@ def init_db():
 
     # Create missing tables
     SQLModel.metadata.create_all(engine)
+    with engine.begin() as connection:
+        character_columns = {
+            row["name"] for row in connection.execute(text("PRAGMA table_info(characters)")).mappings()
+        }
+        if "sprite_path" not in character_columns:
+            connection.execute(text("ALTER TABLE characters ADD COLUMN sprite_path VARCHAR(255)"))
 
     # Default cultivation ranks
     from app.types.progression import Rank
@@ -79,28 +85,32 @@ def init_db():
                 "id": "godzilla", "name": "Godzilla",
                 "title": "King of The Monster", "universe": "Monsterverse",
                 "role": "Dominator", "level": 18, "power": 1280,
-                "rarity": "Legendary", "color": "gold",
+                "rarity": "Legendary", "color": "gold", "sprite_path": "/godzilla.png",
             },
             {
                 "id": "tungsahur", "name": "Triple T", "title": "Bat Guy",
                 "universe": "Rotten Brain", "role": "Guardian", "level": 16,
-                "power": 1160, "rarity": "Epic", "color": "cyan",
+                "power": 1160, "rarity": "Epic", "color": "cyan", "sprite_path": "/triple3-transparent.png",
             },
             {
                 "id": "elonmusk", "name": "Elon Musk",
                 "title": "Richest Guy Alive", "universe": "IRL",
                 "role": "Collector", "level": 14, "power": 1095,
-                "rarity": "Epic", "color": "green",
+                "rarity": "Epic", "color": "green", "sprite_path": "/elon.png",
             },
             {
                 "id": "ghost", "name": "Ghost", "title": "Ghost",
                 "universe": "Call Of Duty", "role": "Executor", "level": 11,
-                "power": 890, "rarity": "Rare", "color": "rose",
+                "power": 890, "rarity": "Rare", "color": "rose", "sprite_path": "/ghost.png",
             },
         ]
         for character_data in default_characters:
-            if session.get(Character, character_data["id"]) is None:
+            character = session.get(Character, character_data["id"])
+            if character is None:
                 session.add(Character(**character_data))
+            elif character.sprite_path != character_data["sprite_path"]:
+                character.sprite_path = character_data["sprite_path"]
+                session.add(character)
 
         session.commit()
 

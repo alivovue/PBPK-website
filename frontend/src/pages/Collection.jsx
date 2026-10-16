@@ -20,7 +20,7 @@ function CharacterDetail({ characterId, token }) {
       <DataState resource={character} emptyMessage="Pilih karakter untuk melihat detailnya.">
         {selected && <>
           <div className="detail-character-head">
-            <EmptyPortrait name={selected.name} tone={selected.color} />
+            <PlaceholderArt id={`CHARACTER_${selected.id}`} label={selected.name} tone={selected.color} className="detail-character-sprite" />
             <div><span className="eyebrow">{selected.rarity}</span><h2>{selected.name}</h2><p>{selected.title}</p></div>
           </div>
           <div className="stat-power"><span>DAYA PENGETAHUAN</span><strong>{selected.power.toLocaleString('id-ID')}</strong></div>

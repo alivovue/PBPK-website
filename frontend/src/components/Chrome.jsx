@@ -28,7 +28,7 @@ export function TopBar({ onMenu, onAccount, token, user, profile }) {
           <div><small>{profile?.rank ?? (token ? 'PENANTANG' : 'PENANTANG TAMU')}</small>{profile && <ProgressBar value={Math.min(100, profile.total_exp / profile.next_level_at_exp * 100)} tone="gold" label={`${profile.total_exp.toLocaleString('id-ID')} / ${profile.next_level_at_exp.toLocaleString('id-ID')} EXP`} />}</div>
         </div>
         {token && <div className="wallet"><span><Coins size={17} /> {profile ? profile.currency_balance.toLocaleString('id-ID') : '—'}</span></div>}
-        <button className="profile-chip" onClick={onAccount} aria-label={token ? 'Buka akun' : 'Masuk ke akun'}><span className="avatar-token">{token ? name.slice(0, 2).toUpperCase() : '?'}</span><span className="profile-name">{name}</span><ChevronDown size={15} /></button>
+        <button className="profile-chip" onClick={onAccount} aria-label={token ? 'Buka akun' : 'Masuk ke akun'}><span className="avatar-token">{token ? name.slice(0, 2).toUpperCase() : <UserRound size={17} aria-hidden="true" />}</span><span className="profile-name">{name}</span><ChevronDown size={15} /></button>
       </div>
     </header>
   )
