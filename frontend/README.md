@@ -45,7 +45,8 @@ existing backend account to retrieve personal data. Authentication uses
 Logout clears it, and `401` responses from the account/profile reads clear an
 expired session. The frontend does not decode tokens or decide access rights.
 
-All other requests are GETs. No battle, grading, reward, promotion, character
+AI conversations use POST and DELETE through `/system-ai`; other data reads use GET.
+No battle, grading, reward, promotion, character
 grant, competition submission, or lesson completion requests are made. Views
 display server-provided values, with local formatting, search, and navigation.
 Features with no matching read API show an unavailable state; mock records and
@@ -55,6 +56,23 @@ Empty API results remain empty. Failed requests show an error and a retry button
 they do not fall back to fabricated content. Character and global leaderboard
 lists use the backend's existing pagination. Character search applies to the
 current page.
+
+## AURI
+
+The floating **AURI** button and Festival's **Tanya AURI** open the same API-backed
+chat. Sign in to send messages, resume saved conversations, start a new one, or
+delete a conversation. Replies display expandable source passages. Loading,
+unavailable model, timeout, and retry states come from the backend; there are no
+local response templates or inference code in the frontend.
+
+**Tanya AURI tentang pelajaran ini** opens a lesson-scoped conversation. The
+**Bahas dengan AURI** buttons on recommended topics open topic-scoped help.
+Only the context ID and message are sent; the backend retrieves the material and
+conversation history. Switching accounts clears the visible chat state.
+
+The AI runtime requires the backend setup described in
+[`backend/app/system_ai/README.md`](../backend/app/system_ai/README.md). No separate
+frontend API host or browser connection to the model workers is needed.
 
 ## Checks
 

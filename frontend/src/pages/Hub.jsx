@@ -4,7 +4,7 @@ import { DataState, SignInPrompt } from '../components/DataState.jsx';
 import { Panel, PlaceholderArt } from '../components/UI.jsx';
 import { useApi } from '../hooks/useApi.js';
 
-export default function Hub({ navigate, session, onSignIn, notify }) {
+export default function Hub({ navigate, session, onSignIn, onAskAuri }) {
   const subjects = useApi(routes.learning.subjects);
   const name = session.account.data?.display_name || session.account.data?.username;
   const profile = session.profile.data;
@@ -25,12 +25,12 @@ export default function Hub({ navigate, session, onSignIn, notify }) {
         <div className="auri-row">
           <PlaceholderArt id="CHAR_AURI_BUST_01" label="Potret AURI" tone="mint" className="auri-art" />
           <div>
-            <span className="eyebrow">PESAN DARI AURI</span>
+            <span className="eyebrow">ASISTEN BELAJAR</span>
             <h3>{name ? `Selamat datang, ${name}.` : 'Selamat datang, Penantang.'}</h3>
-            <p>“Pikiran yang tekun adalah kompas terbaik di antara dunia.”</p>
+            <p>Tanyakan materi, telusuri sumber, dan lanjutkan percakapan belajarmu bersama AURI.</p>
           </div>
         </div>
-        <button className="text-button" onClick={() => notify('Percakapan AURI belum tersedia.')}><MessageCircleQuestion size={17} /> Tanya AURI <ArrowRight size={16} /></button>
+        <button className="text-button" onClick={() => onAskAuri()}><MessageCircleQuestion size={17} /> Tanya AURI <ArrowRight size={16} /></button>
       </Panel>
       <Panel className="daily-panel" eyebrow="PENANTANG" title="Perjalananmu">
         {session.token ? (

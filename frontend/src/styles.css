@@ -26,9 +26,9 @@
 * { box-sizing: border-box; }
 html { min-width: 320px; min-height: 100%; background: var(--navy); }
 body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--paper); }
-button, input { font: inherit; }
+button, input, select, textarea { font: inherit; }
 button { color: inherit; }
-button:focus-visible, input:focus-visible { outline: 3px solid rgba(74, 181, 178, .35); outline-offset: 2px; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid rgba(74, 181, 178, .35); outline-offset: 2px; }
 button:disabled { cursor: not-allowed !important; opacity: .52; }
 
 .app-shell { min-height: 100vh; background-color: var(--paper); }
@@ -576,7 +576,38 @@ button.read-card:hover, .read-card.selected { background: #fff9e9; border-color:
 .badge-row span { font-size: 8px; font-weight: 800; text-align: center; }
 .badge-row .locked { color: #92938e; background: #e2e1da; border-color: #c8c6be; }
 
-.auri-fab { position: fixed; z-index: 50; right: 22px; bottom: 20px; display: flex; align-items: center; gap: 7px; padding: 10px 13px; color: #fff; background: #315f63; border: 2px solid #88bab2; box-shadow: 0 8px 24px rgba(10,18,32,.25); border-radius: 999px; font-size: 10px; font-weight: 850; letter-spacing: .08em; cursor: pointer; }
+.auri-fab { position: fixed; z-index: 86; right: 22px; bottom: 20px; display: flex; align-items: center; gap: 7px; padding: 10px 13px; color: #fff; background: #315f63; border: 2px solid #88bab2; box-shadow: 0 8px 24px rgba(10,18,32,.25); border-radius: 999px; font-size: 10px; font-weight: 850; letter-spacing: .08em; cursor: pointer; }
+.auri-chat { position: fixed; z-index: 85; right: 22px; bottom: 77px; width: min(420px, calc(100vw - 24px)); height: min(720px, calc(100dvh - 104px)); display: flex; flex-direction: column; overflow: hidden; border-top: 4px solid var(--cyan); box-shadow: 0 16px 45px rgba(10,18,32,.23); }
+.auri-chat-header { display: flex; flex: 0 0 auto; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.auri-chat-header > svg { color: #315f63; }
+.auri-chat-header h2 { margin: 0; font: 700 20px Georgia, serif; }
+.auri-chat-header span { color: var(--muted); font-size: 11px; }
+.auri-chat-header > button { margin-left: auto; }
+.auri-availability { padding: 8px 16px; font-size: 12px; background: #e3ece4; }
+.auri-availability p { margin: 0; line-height: 1.5; }
+.auri-availability button { padding-bottom: 0; }
+.auri-conversations { padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.auri-conversations label, .auri-compose label { display: block; margin-bottom: 6px; font-size: 12px; }
+.auri-conversations > div { display: flex; gap: 8px; }
+.auri-conversations select { flex: 1; min-width: 0; }
+.auri-conversations select, .auri-compose textarea { padding: 8px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 3px; font-size: 13px; }
+.auri-context { margin: 0; padding: 8px 16px; font-size: 12px; overflow-wrap: anywhere; }
+.auri-messages { flex: 1; min-height: 60px; padding: 12px 16px; overflow-y: auto; overscroll-behavior: contain; }
+.auri-empty { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.auri-message { padding: 12px; margin-bottom: 12px; border: 1px solid var(--line); background: #e6ede7; border-radius: 4px; overflow-wrap: anywhere; }
+.auri-message-user { margin-left: 24px; background: #f1e8cd; }
+.auri-message > strong { font-size: 11px; }
+.auri-message > p { margin: 7px 0 0; font-size: 13px; line-height: 1.65; white-space: pre-wrap; }
+.auri-source { padding-top: 10px; font-size: 12px; }
+.auri-source summary { cursor: pointer; color: #315f63; }
+.auri-source blockquote { margin: 8px 0 0; padding-left: 10px; border-left: 2px solid var(--cyan); line-height: 1.6; }
+.auri-compose { flex: 0 0 auto; display: grid; gap: 6px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.auri-compose label { margin: 0; }
+.auri-compose textarea { width: 100%; min-height: 54px; max-height: 120px; resize: vertical; }
+.auri-compose > div { display: flex; align-items: center; gap: 12px; }
+.auri-compose small { margin-right: auto; color: var(--muted); font-size: 11px; }
+.lesson-ask { margin-top: 16px; }
+@media (max-width: 600px) { .auri-chat { right: 12px; bottom: 77px; } }
 .auri-popover { position: fixed; z-index: 49; right: 22px; bottom: 77px; width: 295px; padding: 16px; background: var(--panel); border: 1px solid #aeb9ae; border-top: 4px solid var(--cyan); box-shadow: 0 16px 45px rgba(10,18,32,.23); }
 .auri-popover > div { display: flex; align-items: center; gap: 9px; }
 .auri-popover > div > span { display: grid; gap: 1px; }

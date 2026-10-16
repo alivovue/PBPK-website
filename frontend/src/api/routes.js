@@ -2,6 +2,12 @@ const id = (value) => encodeURIComponent(String(value));
 
 // Paths are relative to the backend's existing /api/v1 prefix.
 export const routes = {
+  ai: {
+    status: '/system-ai/status',
+    conversations: '/system-ai/conversations',
+    conversation: (conversationId) => `/system-ai/conversations/${id(conversationId)}`,
+    messages: (conversationId) => `/system-ai/conversations/${id(conversationId)}/messages`,
+  },
   account: { login: '/account/login', register: '/account/register', me: '/account/me' },
   player: {
     me: '/player/me',

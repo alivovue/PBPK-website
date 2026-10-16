@@ -4,7 +4,7 @@ import { DataState, SignInPrompt } from '../components/DataState.jsx';
 import { Panel, ProgressBar, Tag } from '../components/UI.jsx';
 import { useApi } from '../hooks/useApi.js';
 
-export default function Progression({ session, onSignIn }) {
+export default function Progression({ session, onSignIn, onAskAuri }) {
   const ranks = useApi(routes.ranks);
   const exams = useApi(routes.exams);
   const mastery = useApi(session.token ? routes.mastery.me : null, { token: session.token });
@@ -40,6 +40,9 @@ export default function Progression({ session, onSignIn }) {
         {session.token ? <DataState resource={recommendations} emptyMessage="Belum ada rekomendasi topik.">
           <div className="read-list">{recommendations.data?.map((topic) => <div className="read-card" key={topic.topic_id}>
             <strong>{topic.name}</strong><span>{(topic.mastery_score * 100).toLocaleString('id-ID')}% penguasaan</span>
+            <button className="text-button" onClick={() => onAskAuri({
+              topicId: topic.topic_id, label: topic.name, prompt: `Bantu aku mengulang materi ${topic.name}.`,
+            })}>Bahas dengan AURI</button>
           </div>)}</div>
         </DataState> : <SignInPrompt onSignIn={onSignIn} />}
       </Panel>

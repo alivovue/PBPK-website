@@ -1,11 +1,11 @@
-import { BookOpen, Search } from 'lucide-react';
+import { BookOpen, MessageCircleQuestion, Search } from 'lucide-react';
 import { useState } from 'react';
 import { routes } from '../api/routes.js';
 import { DataState } from '../components/DataState.jsx';
 import { Panel, Tag } from '../components/UI.jsx';
 import { useApi } from '../hooks/useApi.js';
 
-function LessonBrowser({ topic }) {
+function LessonBrowser({ topic, onAskAuri }) {
   const lessons = useApi(routes.learning.lessons(topic.id));
   const questions = useApi(routes.learning.questions(topic.id));
   const [lessonId, setLessonId] = useState(null);
@@ -26,6 +26,10 @@ function LessonBrowser({ topic }) {
             <article className="lesson-copy">
               <h3>{detail.data?.title}</h3>
               <div className="lesson-content">{detail.data?.content}</div>
+              <button className="secondary-button lesson-ask" onClick={() => onAskAuri({
+                lessonId: detail.data.id, label: detail.data.title,
+                prompt: `Bantu aku memahami pelajaran ${detail.data.title}.`,
+              })}><MessageCircleQuestion size={17} /> Tanya AURI tentang pelajaran ini</button>
             </article>
           </DataState>
         </DataState>
@@ -45,7 +49,7 @@ function LessonBrowser({ topic }) {
   );
 }
 
-function TopicBrowser({ subject }) {
+function TopicBrowser({ subject, onAskAuri }) {
   const topics = useApi(routes.learning.topics(subject.id));
   const [topicId, setTopicId] = useState(null);
   const selected = topics.data?.find((topic) => topic.id === topicId) ?? topics.data?.[0];
@@ -63,12 +67,12 @@ function TopicBrowser({ subject }) {
           </div>
         </DataState>
       </Panel>
-      {selected && <LessonBrowser key={selected.id} topic={selected} />}
+      {selected && <LessonBrowser key={selected.id} topic={selected} onAskAuri={onAskAuri} />}
     </div>
   );
 }
 
-export default function Learn() {
+export default function Learn({ onAskAuri }) {
   const subjects = useApi(routes.learning.subjects);
   const [subjectId, setSubjectId] = useState(null);
   const [search, setSearch] = useState('');
@@ -90,7 +94,7 @@ export default function Learn() {
                 </button>
               ))}
             </div>
-            {selected && <TopicBrowser key={selected.id} subject={selected} />}
+            {selected && <TopicBrowser key={selected.id} subject={selected} onAskAuri={onAskAuri} />}
           </div>
         )}
       </DataState>
