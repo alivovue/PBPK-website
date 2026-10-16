@@ -40,5 +40,12 @@ export function useSession() {
     setToken(data.access_token);
   };
 
-  return { token, account, profile, signIn, signOut };
+  const signUp = async (details, signal) => {
+    await request(routes.account.register, {
+      method: 'POST', body: details, signal,
+    });
+    await signIn({ username: details.username, password: details.password }, signal);
+  };
+
+  return { token, account, profile, signIn, signUp, signOut };
 }

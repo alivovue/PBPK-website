@@ -2,7 +2,7 @@ const id = (value) => encodeURIComponent(String(value));
 
 // Paths are relative to the backend's existing /api/v1 prefix.
 export const routes = {
-  account: { login: '/account/login', me: '/account/me' },
+  account: { login: '/account/login', register: '/account/register', me: '/account/me' },
   player: {
     me: '/player/me',
     characters: '/player/me/characters',
