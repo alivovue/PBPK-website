@@ -1,5 +1,10 @@
 # Backend
 
+To start the full frontend, backend, and AI runtime, run `docker compose up` from
+the repository root. The frontend uses port 3000 and the API uses port 8000.
+Compose mounts the existing database directory and persists the model cache and
+generated JWT secret. See [the root README](../README.md) for Docker commands.
+
 Use Python 3.10+ and run commands from `backend/`. For a fresh installation:
 
 ```bash

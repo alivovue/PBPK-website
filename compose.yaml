@@ -1,0 +1,52 @@
+name: grand-convergence
+
+services:
+  backend:
+    build:
+      context: ./backend
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 20s
+    ports:
+      - "8000:8000"
+    environment:
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      AI_AUTOSTART: "1"
+      AI_NODE_BINARY: /usr/local/bin/node
+      AI_PYTHON_BINARY: /usr/local/bin/python
+      AI_REQUEST_TIMEOUT_SECONDS: ${AI_REQUEST_TIMEOUT_SECONDS:-30}
+      INDOBERT_MODEL: ${INDOBERT_MODEL:-quarkss/indobert-base-stsb}
+      INDOBERT_THREADS: ${INDOBERT_THREADS:-4}
+      HF_HOME: /app/model-cache
+      JWT_SECRET_FILE: /app/runtime/jwt-secret
+    volumes:
+      - ./backend/database/data:/app/database/data
+      - model_cache:/app/model-cache
+      - backend_runtime:/app/runtime
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  model_cache:
+  backend_runtime:

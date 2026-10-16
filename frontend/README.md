@@ -1,5 +1,9 @@
 # Frontend
 
+For the complete Docker setup, run `docker compose up` from the repository root
+and open **http://localhost:3000**. Nginx serves the production build and proxies
+API and WebSocket requests to the backend. See [the root README](../README.md).
+
 Use Node.js 22.12+ (required by the existing Vite toolchain):
 
 ```bash
