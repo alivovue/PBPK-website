@@ -36,6 +36,7 @@ def init_db():
 
     # Default cultivation ranks
     from app.types.progression import Rank
+    from app.types.character import Character
 
     default_ranks = [
         Rank(
@@ -72,6 +73,19 @@ def init_db():
         for rank in default_ranks:
             if session.get(Rank, rank.id) is None:
                 session.add(rank)
+
+        if session.get(Character, "godzilla") is None:
+            session.add(Character(
+                id="godzilla",
+                name="Godzilla",
+                title="King of The Monster",
+                universe="Monsterverse",
+                role="Dominator",
+                level=18,
+                power=1280,
+                rarity="Legendary",
+                color="gold",
+            ))
 
         session.commit()
 

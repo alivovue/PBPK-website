@@ -1,0 +1,78 @@
+# Backend
+
+Run commands from `backend/` with the backend virtual environment activated:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Startup creates missing database tables and seeds the Godzilla character from the
+example. Existing character records are preserved. To initialize without starting
+the server, run `python -m database.database`.
+
+## Character API
+
+| Method | Path | Authentication | Result |
+| --- | --- | --- | --- |
+| GET | `/api/v1/characters` | Public | Character catalogue, with `owned: false` |
+| GET | `/api/v1/characters/{character_id}` | Public | One catalogue character, with `owned: false` |
+| GET | `/api/v1/player/me/characters` | Bearer token | Entire catalogue with the current player's ownership |
+| GET | `/api/v1/player/me/characters/{character_id}` | Bearer token | One character with the current player's ownership |
+
+List endpoints return a JSON array ordered by string ID. Both support exact-match
+`universe`, `rarity`, and `role` filters, plus `offset` (default `0`, minimum `0`)
+and `limit` (default `100`, range `1`–`100`). The player list also accepts
+`owned=true` or `owned=false`; omit it to include both. Unknown IDs return `404`;
+invalid pagination returns `422`.
+
+Authenticate through `/api/v1/account/login` and send its access token in
+`Authorization: Bearer <access_token>` for the player endpoints. Public endpoints
+always return `owned: false`, even when an Authorization header is present.
+
+```bash
+curl http://localhost:8000/api/v1/characters/godzilla
+curl 'http://localhost:8000/api/v1/player/me/characters?owned=true' \
+  -H 'Authorization: Bearer <access_token>'
+```
+
+Response shape:
+
+```json
+{
+  "id": "godzilla",
+  "name": "Godzilla",
+  "title": "King of The Monster",
+  "universe": "Monsterverse",
+  "role": "Dominator",
+  "level": 18,
+  "power": 1280,
+  "rarity": "Legendary",
+  "color": "gold",
+  "owned": false
+}
+```
+
+`characters` stores catalogue fields, including level and power. `player_characters`
+stores ownership using a unique `(user_id, character_id)` pair with foreign keys.
+New users begin without owned characters; the example's `owned: true` applies only
+after ownership is granted to that account. Catalogue stats are shared across users.
+
+Trusted backend code can add catalogue entries using
+`session.add(Character(...))` from `app.types.character`, or grant ownership using
+`grant_character(session, user_id, character_id)` from `app.characters.service`.
+The grant helper is idempotent and leaves the commit to its caller, allowing grants
+to share a transaction with future rewards or purchases. These mutations are not
+exposed as public API actions.
+
+Interactive API documentation is available at `/docs`.
+
+## Tests
+
+Install the development dependencies and run:
+
+```bash
+pip install -r requirements-dev.txt
+python -m unittest discover -s tests -v
+```
+
+Character tests use a temporary SQLite database and leave local player data intact.

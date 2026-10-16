@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.database import init_db
 from app.routers import (
-    account, player, learning, mastery, progression,
+    account, player, characters, learning, mastery, progression,
     leaderboard, exam, competition, heart_demon,
 )
 
@@ -28,7 +28,7 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
-for module in (account, player, learning, mastery, progression,
+for module in (account, player, characters, learning, mastery, progression,
                leaderboard, exam, competition, heart_demon):
     app.include_router(module.router, prefix="/api/v1")
 
