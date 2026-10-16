@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from app.types.player import PlayerProfile
+from app.types.character import Character, PlayerCharacter
 from app.types.user import User
 from database.database import get_session
 
@@ -61,9 +62,26 @@ def login(session: Session, username: str, password: str) -> dict:
     secret = os.getenv("JWT_SECRET_KEY")
     if not secret:
         raise RuntimeError("JWT_SECRET_KEY must be set in .env")
+
+    # All logged-in players receive the full current character catalogue.
+    # Persisting the grants keeps `owned` and the `owned=true` API filter
+    # consistent, instead of only changing what the frontend displays.
+    owned_character_ids = set(session.exec(
+        select(PlayerCharacter.character_id).where(PlayerCharacter.user_id == user.id)
+    ).all())
+    catalogue_character_ids = set(session.exec(select(Character.id)).all())
+    missing_character_ids = catalogue_character_ids - owned_character_ids
+    if missing_character_ids:
+        session.add_all(
+            PlayerCharacter(user_id=user.id, character_id=character_id)
+            for character_id in missing_character_ids
+        )
+
     if updated_hash is not None:
         user.password_hash = updated_hash
         session.add(user)
+
+    if missing_character_ids or updated_hash is not None:
         session.commit()
     token = jwt.encode({
         "sub": str(user.id),

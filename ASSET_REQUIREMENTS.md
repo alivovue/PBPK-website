@@ -37,13 +37,13 @@ Setiap tokoh membutuhkan ilustrasi kartu setengah badan dan potret UI. Arah seni
 
 | ID aset | Nama berkas | Lokasi UI | Deskripsi karya | Ukuran / rasio | Transparan |
 |---|---|---|---|---|---|
-| `CHAR_AURELIA_CARD_01` | `char-aurelia-card.png` | Koleksi | Penjaga fajar dari Astravia; zirah kain emas, astrolab bercahaya, sikap tenang dan strategis. | 1200×1600 (3:4) | Ya |
+| `CHAR_GODZILLA_CARD_01` | `char-godzilla-card.png` | Koleksi | Penjaga fajar dari Astravia; zirah kain emas, astrolab bercahaya, sikap tenang dan strategis. | 1200×1600 (3:4) | Ya |
 | `CHAR_BIMO_CARD_01` | `char-bimo-404-card.png` | Koleksi | Pendekar meme dari jaringan tua; jaket pixel-retro, pedang kursor, ekspresi percaya diri. | 1200×1600 (3:4) | Ya |
 | `CHAR_IBN_CARD_01` | `char-ibn-sina-card.png` | Koleksi | Interpretasi penuh hormat terhadap Ibn Sina; manuskrip, instrumen ilmiah, busana historis distilisasi. | 1200×1600 (3:4) | Ya |
 | `CHAR_MOMO_CARD_01` | `char-momo-slime-card.png` | Koleksi | Slime pustaka membawa buku sebagai perisai; lucu tetapi cocok dengan dunia fantasi misterius. | 1200×1600 (3:4) | Ya |
 | `CHAR_CIPHER_CARD_01` | `char-cipher-9-card.png` | Koleksi terkunci | Saksi anomali bertudung, tubuh tersusun pecahan prisma ungu; identitas sengaja samar. | 1200×1600 (3:4) | Ya |
 | `CHAR_KARTINI_CARD_01` | `char-kartini-card.png` | Koleksi terkunci | Interpretasi penuh hormat terhadap R.A. Kartini; kebaya, surat bercahaya, motif ukiran Jepara. | 1200×1600 (3:4) | Ya |
-| `CHAR_AURELIA_PORTRAIT_01` | `char-aurelia-portrait.png` | Detail karakter dan HUD battle | Potret kepala/bahu Aurelia dalam bingkai bundar. | 512×512 (1:1) | Ya |
+| `CHAR_GODZILLA_PORTRAIT_01` | `char-godzilla-portrait.png` | Detail karakter dan HUD battle | Potret kepala/bahu GODZILLA dalam bingkai bundar. | 512×512 (1:1) | Ya |
 | `CHAR_BIMO_PORTRAIT_01` | `char-bimo-404-portrait.png` | Detail karakter | Potret kepala/bahu Bimo 404. | 512×512 (1:1) | Ya |
 | `CHAR_IBN_PORTRAIT_01` | `char-ibn-sina-portrait.png` | Detail karakter | Potret kepala/bahu Ibn Sina. | 512×512 (1:1) | Ya |
 | `CHAR_MOMO_PORTRAIT_01` | `char-momo-slime-portrait.png` | Detail karakter | Potret Momo yang tetap terbaca pada ukuran 42 px. | 512×512 (1:1) | Ya |
@@ -54,7 +54,7 @@ Setiap tokoh membutuhkan ilustrasi kartu setengah badan dan potret UI. Arah seni
 
 | ID aset | Nama berkas | Lokasi UI | Deskripsi karya | Ukuran / rasio | Transparan |
 |---|---|---|---|---|---|
-| `CHAR_AURELIA_BATTLE_01` | `char-aurelia-battle-idle.png` | Arena, sisi kiri | Sprite full-body side-view Aurelia dalam pose siap, siluet terbaca dan kaki sejajar ground plane. | 1200×1600 (3:4) | Ya |
+| `CHAR_GODZILLA_BATTLE_01` | `char-godzilla-battle-idle.png` | Arena, sisi kiri | Sprite full-body side-view GODZILLA dalam pose siap, siluet terbaca dan kaki sejajar ground plane. | 1200×1600 (3:4) | Ya |
 | `CHAR_BIMO_BATTLE_01` | `char-bimo-404-battle-idle.png` | Pemilihan karakter dan Arena, sisi kiri | Sprite full-body side-view Bimo 404 menghadap kanan, pose siap dengan pedang kursor. | 1200×1600 (3:4) | Ya |
 | `CHAR_IBN_BATTLE_01` | `char-ibn-sina-battle-idle.png` | Pemilihan karakter dan Arena, sisi kiri | Sprite full-body side-view Ibn Sina menghadap kanan, membawa manuskrip dan instrumen ilmiah. | 1200×1600 (3:4) | Ya |
 | `CHAR_MOMO_BATTLE_01` | `char-momo-slime-battle-idle.png` | Pemilihan karakter dan Arena, sisi kiri | Sprite full-body side-view Momo menghadap kanan, buku-perisai terbuka dalam pose bertahan. | 1200×1600 (3:4) | Ya |

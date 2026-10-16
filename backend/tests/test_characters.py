@@ -75,7 +75,9 @@ class CharacterAPITests(TestCase):
             "universe": "Monsterverse", "role": "Dominator", "level": 18,
             "power": 1280, "rarity": "Legendary", "color": "gold", "owned": False,
         }
-        self.assertEqual(response.json(), [expected])
+        characters = {character["id"]: character for character in response.json()}
+        self.assertEqual(set(characters), {"godzilla", "tungsahur", "elonmusk", "ghost"})
+        self.assertEqual(characters["godzilla"], expected)
         detail = self.client.get("/api/v1/characters/godzilla")
         self.assertEqual(detail.status_code, 200)
         self.assertEqual(detail.json(), expected)
@@ -99,7 +101,8 @@ class CharacterAPITests(TestCase):
                 headers = self.authorization(user_id)
                 response = self.client.get("/api/v1/player/me/characters", headers=headers)
                 self.assertEqual(response.status_code, 200)
-                self.assertEqual(response.json()[0]["owned"], owned)
+                listed = {character["id"]: character for character in response.json()}
+                self.assertEqual(listed["godzilla"]["owned"], owned)
                 detail = self.client.get(
                     "/api/v1/player/me/characters/godzilla", headers=headers
                 )
@@ -121,14 +124,14 @@ class CharacterAPITests(TestCase):
             "/api/v1/characters", params={"universe": "Unknown"}
         ).json(), [])
         page = self.client.get("/api/v1/characters", params={"offset": 1, "limit": 1})
-        self.assertEqual([row["id"] for row in page.json()], ["kong"])
-        for owned, expected_id in (("true", "godzilla"), ("false", "kong")):
+        self.assertEqual([row["id"] for row in page.json()], ["ghost"])
+        for owned, expected_ids in (("true", ["godzilla"]), ("false", ["elonmusk", "ghost", "kong", "tungsahur"])):
             response = self.client.get(
                 "/api/v1/player/me/characters", params={"owned": owned},
                 headers=self.authorization(self.alice_id),
             )
             self.assertEqual(response.status_code, 200)
-            self.assertEqual([row["id"] for row in response.json()], [expected_id])
+            self.assertEqual([row["id"] for row in response.json()], expected_ids)
         response = self.client.get(
             "/api/v1/player/me/characters", params={"owned": "true"},
             headers=self.authorization(self.bob_id),
@@ -156,7 +159,7 @@ class CharacterAPITests(TestCase):
         database.init_db()
         database.init_db()
         with Session(self.engine) as session:
-            self.assertEqual(len(session.exec(select(Character)).all()), 1)
+            self.assertEqual(len(session.exec(select(Character)).all()), 4)
             self.assertEqual(session.get(Character, "godzilla").power, 2048)
             self.assertIsNotNone(session.get(PlayerCharacter, (self.alice_id, "godzilla")))
 

@@ -74,18 +74,33 @@ def init_db():
             if session.get(Rank, rank.id) is None:
                 session.add(rank)
 
-        if session.get(Character, "godzilla") is None:
-            session.add(Character(
-                id="godzilla",
-                name="Godzilla",
-                title="King of The Monster",
-                universe="Monsterverse",
-                role="Dominator",
-                level=18,
-                power=1280,
-                rarity="Legendary",
-                color="gold",
-            ))
+        default_characters = [
+            {
+                "id": "godzilla", "name": "Godzilla",
+                "title": "King of The Monster", "universe": "Monsterverse",
+                "role": "Dominator", "level": 18, "power": 1280,
+                "rarity": "Legendary", "color": "gold",
+            },
+            {
+                "id": "tungsahur", "name": "Triple T", "title": "Bat Guy",
+                "universe": "Rotten Brain", "role": "Guardian", "level": 16,
+                "power": 1160, "rarity": "Epic", "color": "cyan",
+            },
+            {
+                "id": "elonmusk", "name": "Elon Musk",
+                "title": "Richest Guy Alive", "universe": "IRL",
+                "role": "Collector", "level": 14, "power": 1095,
+                "rarity": "Epic", "color": "green",
+            },
+            {
+                "id": "ghost", "name": "Ghost", "title": "Ghost",
+                "universe": "Call Of Duty", "role": "Executor", "level": 11,
+                "power": 890, "rarity": "Rare", "color": "rose",
+            },
+        ]
+        for character_data in default_characters:
+            if session.get(Character, character_data["id"]) is None:
+                session.add(Character(**character_data))
 
         session.commit()
 
