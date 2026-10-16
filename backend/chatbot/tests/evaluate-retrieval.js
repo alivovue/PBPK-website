@@ -92,7 +92,7 @@ async function evaluateRetriever(name, retrieve) {
 
 (async () => {
   const summaries = [];
-  if (mode === 'tfidf' || mode === 'both') summaries.push(await evaluateRetriever('TF-IDF production fallback', async (question) => retrieveTfidf(question)));
+  if (mode === 'tfidf' || mode === 'both') summaries.push(await evaluateRetriever('TF-IDF offline baseline', async (question) => retrieveTfidf(question)));
   if (mode === 'indobert' || mode === 'both') {
     try {
       const health = await fetch(`${semanticUrl}/health`, { signal: AbortSignal.timeout(2_000) });

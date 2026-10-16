@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { detectChatIntent } = require('../chat-intents');
+const { detectChatIntent, normalizeMaterialQuery } = require('../chat-intents');
 
 test('sapaan dikenali dan bisa dijawab tanpa retrieval', () => {
   assert.equal(detectChatIntent('Halo!'), 'greeting');
@@ -37,4 +37,18 @@ test('ucapan terima kasih dikenali', () => {
 
 test('pertanyaan konsep tetap diteruskan ke retrieval', () => {
   assert.equal(detectChatIntent('aku mau belajar indeks database'), null);
+});
+
+test('intent sosial sederhana dijawab tanpa retrieval materi', () => {
+  assert.equal(detectChatIntent('kamu siapa?'), 'identity');
+  assert.equal(detectChatIntent('nama kamu siapa'), 'identity');
+  assert.equal(detectChatIntent('kamu bisa bantu apa?'), 'capabilities');
+  assert.equal(detectChatIntent('apa kabar?'), 'smalltalk');
+  assert.equal(detectChatIntent('wkwkwk'), 'smalltalk');
+});
+
+test('pertanyaan materi dibersihkan dari basa-basi dan istilah index dinormalisasi', () => {
+  assert.equal(normalizeMaterialQuery('aku mau tau tentang index dong'), 'database index indexing search key records pointer');
+  assert.equal(normalizeMaterialQuery('hai, jelasin RAID 1 dong'), 'RAID 1 disk mirroring copy redundancy fault tolerance failure');
+  assert.equal(detectChatIntent('aku mau tau tentang index dong'), null);
 });

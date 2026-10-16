@@ -2,35 +2,19 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
-const { generateWithGemini } = require('./gemini-client');
-const { createTfIdfRetriever } = require('./tfidf-retriever');
-const { fuseRankedCandidates } = require('./hybrid-retriever');
-const { resolveAcceptedExplanation } = require('./followup');
-const { detectChatIntent } = require('./chat-intents');
+const { resolveContextualQuestion } = require('./followup');
+const { detectChatIntent, normalizeMaterialQuery } = require('./chat-intents');
+const { buildTemplateReply } = require('./template-responder');
 
 const ROOT = path.resolve(__dirname, '../..');
 const DATA_FILE = path.join(__dirname, 'data', 'materials.json');
-
-function loadLocalEnv() {
-  const envFile = path.resolve(__dirname, '..', '.env');
-  if (!fs.existsSync(envFile)) return;
-  for (const line of fs.readFileSync(envFile, 'utf8').split(/\r?\n/)) {
-    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
-    if (!match || match[1] in process.env) continue;
-    process.env[match[1]] = match[2].replace(/^(['"])(.*)\1$/, '$2');
-  }
-}
-loadLocalEnv();
-
 const PORT = Number(process.env.PORT || 3000);
 const SEMANTIC_URL = 'http://127.0.0.1:3010';
 const SEMANTIC_THRESHOLD = Number(process.env.INDOBERT_MIN_SCORE || 0.32);
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 const MAX_BODY_BYTES = 8_000;
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS_PER_WINDOW = 30;
 const chunks = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-const retrieve = createTfIdfRetriever(chunks);
 const requestCounts = new Map();
 let indobertProcess = null;
 
@@ -40,14 +24,12 @@ async function retrieveSemantic(query) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: query }),
-      // Semantic search must not leave the chat spinner running for minutes.
-      // If the model is still loading, the local lexical search is used instead.
       signal: AbortSignal.timeout(8_000),
     });
     if (!response.ok) return null;
     const result = await response.json();
     if (!Array.isArray(result.matches)) return null;
-    return result.matches.map((item) => ({ document: item, score: item.score, semantic: true }));
+    return result.matches;
   } catch {
     return null;
   }
@@ -85,7 +67,11 @@ function serveStatic(request, response) {
 
 const server = http.createServer((request, response) => {
   if (request.method === 'GET' && request.url === '/api/status') {
-    return sendJson(response, 200, { backendVersion: 'hybrid-rrf-v1' });
+    return sendJson(response, 200, {
+      backendVersion: 'indobert-template-v1',
+      retrievalModel: 'quarkss/indobert-base-stsb',
+      responder: 'template-local',
+    });
   }
   if (request.method === 'POST' && request.url === '/api/chat') {
     const now = Date.now();
@@ -100,74 +86,53 @@ const server = http.createServer((request, response) => {
     let body = '';
     request.on('data', (part) => {
       body += part;
-      if (Buffer.byteLength(body) > MAX_BODY_BYTES) {
-        request.destroy();
-      }
+      if (Buffer.byteLength(body) > MAX_BODY_BYTES) request.destroy();
     });
     request.on('end', async () => {
       try {
         const payload = JSON.parse(body || '{}');
         const question = typeof payload.message === 'string' ? payload.message.trim() : '';
-        const provider = payload.provider === 'gemini' ? 'gemini' : 'indobert';
         if (!question || question.length > 1_000) {
           return sendJson(response, 400, { error: 'Tulis pertanyaan (maksimal 1.000 karakter).' });
         }
         const intent = detectChatIntent(question);
-        if (intent === 'greeting') {
-          return sendJson(response, 200, {
-            reply: 'Hai! Aku System, asisten belajarmu. Aku bisa bantu belajar Performance Tuning: indeks dan skema database, query, transaksi, hardware/RAID, atau benchmark. Kamu ingin mulai dari yang mana?',
-            sources: [],
-            retrieval: 'chat-intent',
-            provider,
-          });
+        const contextualQuestion = resolveContextualQuestion(question, payload.history);
+        let sources = [];
+        let confidence = null;
+
+        if (!['greeting', 'identity', 'capabilities', 'smalltalk', 'thanks'].includes(intent)) {
+          const retrievalQuestion = normalizeMaterialQuery(contextualQuestion || question);
+          let matches;
+          if (intent === 'module-overview') {
+            const outline = chunks.find((chunk) => chunk.page === 4);
+            matches = outline ? [{ ...outline, score: 1 }] : [];
+          } else {
+            matches = await retrieveSemantic(retrievalQuestion);
+            if (!matches) {
+              return sendJson(response, 503, {
+                error: 'Service pencarian IndoBERT belum siap. Pastikan backend Python sudah selesai memuat model, lalu coba lagi.',
+              });
+            }
+          }
+
+          const best = matches[0];
+          if (best && Number(best.score) >= SEMANTIC_THRESHOLD) {
+            confidence = Number(best.score);
+            sources = matches.slice(0, 3).map((item) => ({
+              page: item.page,
+              text: item.text,
+              score: Number(Number(item.score).toFixed(2)),
+            }));
+          }
         }
-        if (intent === 'thanks') {
-          return sendJson(response, 200, {
-            reply: 'Sama-sama! Semoga makin paham materinya. Kalau mau, kita bisa lanjut belajar konsep lain atau latihan soal 😊',
-            sources: [],
-            retrieval: 'chat-intent',
-            provider,
-          });
-        }
-        if (intent === 'module-overview') {
-          const outline = chunks.find((chunk) => chunk.page === 4);
-          const sources = outline ? [{ page: outline.page, text: outline.text, score: 1 }] : [];
-          const reply = 'Di modul Performance Tuning ini ada beberapa topik utama:\n\n• Overview dan dasar performance tuning\n• Index dan schema tuning\n• Query tuning\n• Transaction tuning\n• Hardware tuning, termasuk RAID dan pengelolaan memori\n• Performance simulation\n• Performance benchmark\n\nMau mulai belajar indeks database, atau ada topik lain yang menarik buatmu?';
-          return sendJson(response, 200, { reply, sources, retrieval: 'module-outline', provider });
-        }
-        const acceptedExplanation = resolveAcceptedExplanation(question, payload.history);
-        const retrievalQuestion = acceptedExplanation?.contextQuestion || question;
-        const semanticCandidates = await retrieveSemantic(retrievalQuestion);
-        const lexicalCandidates = retrieve(retrievalQuestion, 10);
-        const semanticConfident = Boolean(semanticCandidates?.length)
-          && semanticCandidates[0].score >= SEMANTIC_THRESHOLD;
-        const matches = semanticConfident
-          ? fuseRankedCandidates({ semanticMatches: semanticCandidates, lexicalMatches: lexicalCandidates, limit: 3, rankConstant: 10, semanticWeight: 0.1 })
-          : lexicalCandidates.slice(0, 3);
-        const retrieval = semanticConfident ? 'hybrid-rrf' : 'tfidf-fallback';
-        if (!matches.length && provider !== 'gemini' && !acceptedExplanation) {
-          return sendJson(response, 200, {
-            reply: semanticCandidates?.length
-              ? 'System belum yakin modul ini membahas pertanyaan tersebut. Coba tanyakan tentang indeks, tuning query, transaksi, perangkat keras/RAID, atau benchmark.'
-              : 'System belum menemukan bagian yang cocok di modul ini. Coba sebutkan kata kunci, misalnya indeks, query, transaksi, RAID, atau benchmark.',
-            sources: [],
-            retrieval,
-            confidence: semanticCandidates?.[0]?.score ?? null,
-          });
-        }
-        const sources = matches.map(({ document, score }) => ({ page: document.page, text: document.text, score: Number(score.toFixed(2)) }));
-        if (provider === 'gemini' || acceptedExplanation) {
-          const generated = await generateWithGemini({ question: acceptedExplanation?.generationQuestion || question, sources, history: payload.history, apiKey: process.env.GEMINI_API_KEY, model: GEMINI_MODEL });
-          if (generated.error) return sendJson(response, 502, { error: generated.error });
-          return sendJson(response, 200, { reply: generated.reply, sources, retrieval, provider: 'gemini', model: generated.model, followUp: Boolean(acceptedExplanation) });
-        }
-        const best = matches[0].document;
-        const preview = best.text.length > 480 ? `${best.text.slice(0, 477).trimEnd()}...` : best.text;
+
+        const reply = buildTemplateReply({ question: contextualQuestion || question, intent, sources });
         return sendJson(response, 200, {
-          reply: `System menemukan bagian yang mungkin membantu (halaman ${best.page}).\n\n${preview}\n\nKetik “mau” kalau kamu ingin penjelasan sederhana dengan analogi.`,
+          reply,
           sources,
-          retrieval,
-          provider,
+          retrieval: sources.length ? 'indobert-semantic' : 'chat',
+          generator: 'template-local',
+          confidence,
         });
       } catch {
         return sendJson(response, 400, { error: 'Pesan tidak terbaca. Coba kirim ulang.' });
@@ -185,7 +150,7 @@ const server = http.createServer((request, response) => {
 
 server.listen(PORT, () => {
   console.log(`System demo siap: http://localhost:${PORT}`);
-  console.log('Backend flow: hybrid-rrf-v1');
+  console.log('Backend flow: IndoBERT retrieval + Indonesian template explanations');
   console.log(`Materi dimuat: ${chunks.length} potongan dari PDF kuliah.`);
   const python = path.resolve(ROOT, '.venv', 'Scripts', 'python.exe');
   if (fs.existsSync(python) && process.env.INDOBERT_EXTERNAL !== '1') {
@@ -195,15 +160,15 @@ server.listen(PORT, () => {
       stdio: ['ignore', 'inherit', 'inherit'],
       windowsHide: true,
     });
-    indobertProcess.on('error', (error) => console.error(`IndoBERT service unavailable; TF-IDF fallback active: ${error.message}`));
+    indobertProcess.on('error', (error) => console.error(`IndoBERT service gagal dimulai: ${error.message}`));
     indobertProcess.on('exit', (code) => {
       indobertProcess = null;
-      console.warn(`IndoBERT service stopped (${code}); TF-IDF fallback active.`);
+      console.warn(`IndoBERT service berhenti (${code}); chat retrieval tidak tersedia sampai service aktif lagi.`);
     });
   } else if (process.env.INDOBERT_EXTERNAL === '1') {
     console.log(`Menggunakan service IndoBERT eksternal di ${SEMANTIC_URL}.`);
   } else {
-    console.log('IndoBERT dependencies not installed; TF-IDF fallback active. See README setup.');
+    console.log('Python IndoBERT belum terpasang. Ikuti langkah instalasi di README.md.');
   }
 });
 

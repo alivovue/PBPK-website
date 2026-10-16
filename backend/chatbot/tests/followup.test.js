@@ -1,49 +1,43 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { resolveAcceptedExplanation } = require('../followup');
+const { resolveContextualQuestion } = require('../followup');
 
 const history = [
   { role: 'user', text: 'apa itu index database?' },
-  { role: 'model', text: 'Index membantu pencarian data. Ketik “mau” kalau kamu ingin penjelasan sederhana dengan analogi.' },
+  { role: 'model', text: 'System menemukan bagian yang mungkin membantu (halaman 14): kutipan materi.' },
 ];
 
-test('jawaban “mau” mengacu ke pertanyaan terakhir setelah System menawarkan penjelasan', () => {
-  assert.deepEqual(resolveAcceptedExplanation('mau', history), {
-    contextQuestion: 'apa itu index database?',
-    generationQuestion: 'Jelaskan dengan analogi sederhana topik dari pertanyaan siswa sebelumnya: apa itu index database?',
-    kind: 'accepted-explanation',
-  });
-  assert.equal(resolveAcceptedExplanation('boleh jelasin dong', history)?.kind, 'accepted-explanation');
+test('follow-up “mau” mengulang pencarian topik sebelumnya', () => {
+  assert.equal(resolveContextualQuestion('mau', history), 'apa itu index database?');
+  assert.equal(resolveContextualQuestion('boleh jelasin dong', history), 'apa itu index database?');
+  assert.equal(resolveContextualQuestion('jelasin', history), 'apa itu index database?');
 });
 
-test('jawaban afirmatif biasa tidak mengubah pertanyaan menjadi follow-up penjelasan', () => {
-  assert.equal(resolveAcceptedExplanation('mau', [{ role: 'user', text: 'halo' }, { role: 'model', text: 'Halo, ada yang bisa kubantu?' }]), null);
-  assert.equal(resolveAcceptedExplanation('buat latihan', history), null);
+test('jawaban afirmatif tanpa kutipan materi bukan follow-up topik', () => {
+  assert.equal(resolveContextualQuestion('mau', [
+    { role: 'user', text: 'halo' }, { role: 'model', text: 'Hai, ada yang bisa kubantu?' },
+  ]), null);
+  assert.equal(resolveContextualQuestion('buat latihan', history), null);
 });
 
-test('follow-up tidak diproses jika tidak ada pertanyaan sebelumnya', () => {
-  assert.equal(resolveAcceptedExplanation('iya', [{ role: 'model', text: 'Mau aku jelaskan dengan analogi?' }]), null);
-});
-
-test('pertanyaan lanjutan pendek mewarisi topik percakapan sebelumnya', () => {
-  const nonOfferHistory = [
-    { role: 'user', text: 'apa itu index database?' },
-    { role: 'model', text: 'Index membantu pencarian data dari tabel.' },
-  ];
-  assert.deepEqual(resolveAcceptedExplanation('contohnya?', nonOfferHistory), {
-    contextQuestion: 'apa itu index database?',
-    generationQuestion: 'Jawab pertanyaan lanjutan siswa “contohnya?” dengan konteks topik dari pertanyaan sebelumnya: apa itu index database?',
-    kind: 'contextual-follow-up',
-  });
-  assert.equal(resolveAcceptedExplanation('terus?', nonOfferHistory)?.contextQuestion, 'apa itu index database?');
-});
-
-test('beberapa follow-up berturut-turut tetap melekat ke topik terakhir yang substantif', () => {
-  const multiTurnHistory = [
-    { role: 'user', text: 'apa itu index database?' },
-    { role: 'model', text: 'Index membantu mencari data.' },
+test('follow-up pendek mewarisi pertanyaan terakhir yang substantif', () => {
+  const turns = [
+    ...history,
     { role: 'user', text: 'contohnya?' },
-    { role: 'model', text: 'Bayangkan katalog buku.' },
+    { role: 'model', text: 'Ini kutipan materi yang terkait dengan pertanyaanmu sebelumnya.' },
   ];
-  assert.equal(resolveAcceptedExplanation('kenapa begitu?', multiTurnHistory)?.contextQuestion, 'apa itu index database?');
+  assert.equal(resolveContextualQuestion('kenapa begitu?', turns), 'apa itu index database?');
+});
+
+test('follow-up tidak dijalankan tanpa riwayat materi', () => {
+  assert.equal(resolveContextualQuestion('iya', [{ role: 'model', text: 'Mau aku bantu?' }]), null);
+});
+
+test('follow-up lanjut terhubung ke jawaban yang punya sumber materi', () => {
+  const history = [
+    { role: 'user', text: 'Apa itu RAID 1?' },
+    { role: 'model', text: 'RAID 1 menyimpan salinan data.', hasSources: true },
+  ];
+  assert.equal(resolveContextualQuestion('jelasin lagi', history), 'Apa itu RAID 1?');
+  assert.equal(resolveContextualQuestion('jelasin', history), 'Apa itu RAID 1?');
 });
