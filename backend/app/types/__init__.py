@@ -6,3 +6,5 @@ from . import question
 from . import mastery
 from . import exam
 from . import competition
+
+from . import competition_result
