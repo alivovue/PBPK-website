@@ -106,6 +106,10 @@ button:disabled { cursor: not-allowed !important; opacity: .52; }
 .placeholder-art::before { width: 120px; height: 120px; }
 .placeholder-art::after { width: 64px; height: 64px; }
 .placeholder-art > div { position: relative; z-index: 2; display: grid; justify-items: center; gap: 5px; padding: 12px; text-align: center; }
+.character-sprite::before, .character-sprite::after, .character-sprite .art-rune { display: none; }
+.character-sprite img { position: relative; z-index: 2; width: 100%; height: 100%; padding: 8px; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 10px 11px rgba(5, 12, 22, .32)); }
+.image-art::before, .image-art::after, .image-art .art-rune { display: none; }
+.image-art img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .placeholder-art strong { font: 700 13px Georgia, serif; }
 .placeholder-art small { color: rgba(255,255,255,.68); font: 700 8px ui-monospace, monospace; letter-spacing: .08em; }
 .art-rune { position: absolute; z-index: 1; color: rgba(255,255,255,.08); font: 170px/1 Georgia, serif; transform: scaleX(.7); }
@@ -340,6 +344,7 @@ button.read-card:hover, .read-card.selected { background: #fff9e9; border-color:
 .detail-character-head { display: flex; align-items: center; gap: 13px; padding-bottom: 18px; border-bottom: 1px solid #d5d2c7; }
 .detail-character-head .mini-portrait { width: 62px; height: 62px; }
 .detail-character-head h2 { margin: 5px 0 1px; font: 700 24px Georgia, serif; }
+.detail-character-sprite { flex: 0 0 auto; width: 74px; height: 82px; border: 1px solid #c4c0b3; }
 .detail-character-head p { margin: 0; color: var(--muted); font-size: 10px; }
 .stat-power { display: flex; align-items: end; justify-content: space-between; padding: 17px 0; }
 .stat-power span, .stat-grid span, .ability-card span { color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .1em; }
@@ -369,6 +374,7 @@ button.read-card:hover, .read-card.selected { background: #fff9e9; border-color:
 .arena-event-card { min-height: 211px; display: grid; grid-template-columns: 47% 1fr; overflow: hidden; }
 .arena-event-art { min-height: 211px; border: 0; }.arena-event-card > div:last-child { display: grid; align-content: center; gap: 7px; padding: 18px; }
 .arena-event-card h2 { margin: 0; font: 700 20px Georgia, serif; }.arena-event-card p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.arena-event-card h2 { font-size: 0; }.arena-event-card h2::after { content: 'SouthEast Asia Masters Olympiad 2024'; font: 700 20px Georgia, serif; }
 .arena-ranking { justify-content: center; min-height: 95px; color: var(--navy); background: #e4e2d8; font: 700 16px Georgia, serif; }.arena-ranking svg { color: var(--gold); }
 .arena-modal-backdrop { position: fixed; z-index: 90; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(7, 12, 22, .75); }
 .arena-picker-modal { position: relative; width: min(1050px, 100%); max-height: calc(100vh - 40px); overflow: auto; padding: 28px; }.arena-picker-modal h2 { margin: 5px 0; font: 700 26px Georgia, serif; }.arena-picker-modal > p { margin: 0 0 20px; color: var(--muted); font-size: 11px; }.arena-picker-modal .primary-button { margin-top: 18px; }.modal-close { position: absolute; top: 17px; right: 22px; }
@@ -404,7 +410,7 @@ button.read-card:hover, .read-card.selected { background: #fff9e9; border-color:
 .round-counter i { width: 1px; height: 17px; margin-inline: 5px; background: #bcbdb6; }
 .combat-stage { position: relative; min-height: 500px; overflow: hidden; color: #fff; background: #18263a; border-color: #3c495d; }
 .combat-stage::after { content: ''; position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; height: 14%; background: #172236; border-top: 4px solid #52617a; }
-.combat-background { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #334d66; }
+.combat-background { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background-color: #334d66; background-image: linear-gradient(rgba(17, 32, 49, .2), rgba(17, 32, 49, .38)), url('/bakcgroundArena.png'); background-size: cover; background-position: center; }
 .combat-background::before { width: 260px; height: 260px; }
 .combat-background::after { width: 150px; height: 150px; }
 .combat-background .art-rune { font-size: 410px; }
@@ -423,10 +429,15 @@ button.read-card:hover, .read-card.selected { background: #fff9e9; border-color:
 .combatant-player { left: 8%; }
 .combatant-enemy { right: 8%; }
 .combatant-art { width: 100%; height: 100%; border: 0; border-bottom: 5px solid rgba(12, 20, 34, .5); }
+.combatant .character-sprite { background: transparent; }
+.combatant .character-sprite img { padding: 0; }
+.combatant-enemy .character-sprite img { transform: scaleX(-1); }
 .combatant-art .art-rune { font-size: 250px; }
 .combatant-art strong { font-size: 16px; }
-.round-seal { position: absolute; z-index: 8; left: 50%; top: 23px; width: 70px; height: 70px; display: grid; place-content: center; justify-items: center; gap: 1px; color: #fff0c0; background: #101b2d; border: 2px solid var(--gold); transform: translateX(-50%) rotate(45deg); }
-.round-seal > * { transform: rotate(-45deg); }
+.round-seal { position: absolute; z-index: 8; left: 50%; top: 23px; width: 70px; height: 70px; display: grid; place-items: center; color: #fff0c0; background: #101b2d; border: 2px solid var(--gold); text-align: center; transform: translateX(-50%) rotate(45deg); }
+.round-seal > * { grid-area: 1 / 1; width: 100%; transform: rotate(-45deg); transform-origin: center; }
+.round-seal span { transform: translateY(-9px) rotate(-45deg); }
+.round-seal b { transform: translateY(9px) rotate(-45deg); }
 .round-seal span { font-size: 7px; font-weight: 850; letter-spacing: .08em; white-space: nowrap; }
 .round-seal b { font: 800 18px Georgia, serif; }
 .battle-end-banner { position: absolute; z-index: 12; left: 50%; top: 54%; width: min(480px, 80%); display: grid; justify-items: center; gap: 7px; padding: 23px; color: var(--navy); background: #f3df9d; border: 4px double #a97b24; box-shadow: 0 18px 55px rgba(0,0,0,.42); transform: translate(-50%, -50%); }

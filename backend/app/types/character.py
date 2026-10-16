@@ -12,6 +12,7 @@ class CharacterBase(SQLModel):
     power: int = Field(default=0, ge=0)
     rarity: str = Field(min_length=1, max_length=50)
     color: str = Field(min_length=1, max_length=50)
+    sprite_path: str | None = Field(default=None, max_length=255)
 
 
 class Character(CharacterBase, table=True):

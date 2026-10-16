@@ -73,7 +73,8 @@ class CharacterAPITests(TestCase):
         expected = {
             "id": "godzilla", "name": "Godzilla", "title": "King of The Monster",
             "universe": "Monsterverse", "role": "Dominator", "level": 18,
-            "power": 1280, "rarity": "Legendary", "color": "gold", "owned": False,
+            "power": 1280, "rarity": "Legendary", "color": "gold",
+            "sprite_path": "/godzilla.png", "owned": False,
         }
         characters = {character["id"]: character for character in response.json()}
         self.assertEqual(set(characters), {"godzilla", "tungsahur", "elonmusk", "ghost"})
