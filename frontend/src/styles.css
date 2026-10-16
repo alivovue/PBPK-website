@@ -484,6 +484,7 @@ button.read-card:hover, .read-card.selected { background: #fff9e9; border-color:
 .answer-result p { margin: 0; color: inherit; font-size: 9px; }
 .answer-result small { color: #626a67; font-size: 8px; line-height: 1.45; }
 .answer-result .secondary-button { flex: 0 0 auto; }
+.question-turn-panel .answer-result { display: none; }
 
 /* Competition */
 .competition-grid { display: grid; grid-template-columns: minmax(380px, .75fr) minmax(460px, 1.25fr); gap: 18px; align-items: start; }
