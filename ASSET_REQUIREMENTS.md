@@ -55,6 +55,9 @@ Setiap tokoh membutuhkan ilustrasi kartu setengah badan dan potret UI. Arah seni
 | ID aset | Nama berkas | Lokasi UI | Deskripsi karya | Ukuran / rasio | Transparan |
 |---|---|---|---|---|---|
 | `CHAR_AURELIA_BATTLE_01` | `char-aurelia-battle-idle.png` | Arena, sisi kiri | Sprite full-body side-view Aurelia dalam pose siap, siluet terbaca dan kaki sejajar ground plane. | 1200×1600 (3:4) | Ya |
+| `CHAR_BIMO_BATTLE_01` | `char-bimo-404-battle-idle.png` | Pemilihan karakter dan Arena, sisi kiri | Sprite full-body side-view Bimo 404 menghadap kanan, pose siap dengan pedang kursor. | 1200×1600 (3:4) | Ya |
+| `CHAR_IBN_BATTLE_01` | `char-ibn-sina-battle-idle.png` | Pemilihan karakter dan Arena, sisi kiri | Sprite full-body side-view Ibn Sina menghadap kanan, membawa manuskrip dan instrumen ilmiah. | 1200×1600 (3:4) | Ya |
+| `CHAR_MOMO_BATTLE_01` | `char-momo-slime-battle-idle.png` | Pemilihan karakter dan Arena, sisi kiri | Sprite full-body side-view Momo menghadap kanan, buku-perisai terbuka dalam pose bertahan. | 1200×1600 (3:4) | Ya |
 | `BOSS_NULL_ECHO_BATTLE_01` | `boss-null-echo-battle.png` | Arena, sisi kanan | Manifestasi humanoid NULL, armor data retak, wajah berupa void geometris, fragmen magenta mengarah ke kiri. | 1200×1600 (3:4) | Ya |
 | `BOSS_NULL_RIFT_01` | `boss-null-rift.png` | Kartu event hub | Tangan/siluet NULL muncul dari portal data yang pecah; komposisi vertikal dramatis. | 900×1200 (3:4) | Ya |
 | `BOSS_NULL_EXAM_01` | `boss-null-exam-proctor.png` | Kartu Ujian Gerbang Roh Astral | NULL sebagai pengawas ujian—mahkota sinyal, lembar data melayang, gestur mengancam namun tidak horor. | 900×1200 (3:4) | Ya |

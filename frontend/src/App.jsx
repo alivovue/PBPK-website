@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
   ArrowLeft, ArrowRight, Award, BookOpen, Bot, BrainCircuit, Check, ChevronRight,
-  CircleHelp, Clock3, Coins, Compass, Crown, Flame, Gem, GraduationCap, LockKeyhole,
+  CircleHelp, Clock3, Coins, Compass, Crown, Flame, Gem, GraduationCap, HeartPulse, LockKeyhole,
   Map, Medal, MessageCircleQuestion, Orbit, Play, RotateCcw, Search, ShieldCheck,
   Sparkles, Star, Sword, Swords, Target, Timer, Trophy, UsersRound, WandSparkles,
   Zap,
@@ -141,35 +141,180 @@ function Collection({ notify }) {
   )
 }
 
+const battleActions = [
+  { id: 'basic', name: 'Serangan Dasar', short: 'Basic Attack', detail: '18 kerusakan', cooldown: 0, icon: Sword, tone: 'basic' },
+  { id: 'regen', name: 'Regenerasi Aether', short: 'Regen', detail: 'Pulihkan 24 HP', cooldown: 2, icon: HeartPulse, tone: 'regen' },
+  { id: 'special', name: 'Retakan Wawasan', short: 'Special Attack', detail: '30 kerusakan', cooldown: 2, icon: WandSparkles, tone: 'special' },
+  { id: 'ultimate', name: 'Konvergensi Agung', short: 'Ultimate', detail: '45 kerusakan', cooldown: 3, icon: Flame, tone: 'ultimate' },
+]
+
+const battleQuestions = [
+  { subject: 'Matematika', question: 'Sebuah artefak memiliki 3/4 energi. Jika 1/4 digunakan, berapa bagian energi yang tersisa?', options: ['1/4', '1/2', '2/3', '3/4'], answer: 1, insight: '3/4 − 1/4 = 2/4, lalu disederhanakan menjadi 1/2.' },
+  { subject: 'IPA', question: 'Planet manakah yang memiliki waktu revolusi paling singkat mengelilingi Matahari?', options: ['Bumi', 'Mars', 'Merkurius', 'Saturnus'], answer: 2, insight: 'Merkurius adalah planet terdekat dari Matahari dan berevolusi sekitar 88 hari.' },
+  { subject: 'Bahasa Indonesia', question: 'Kalimat manakah yang merupakan pendapat?', options: ['Air membeku pada 0°C.', 'Menurutku, membaca adalah perjalanan terbaik.', 'Indonesia memiliki ribuan pulau.', 'Matahari terbit dari timur.'], answer: 1, insight: 'Kata “menurutku” menandai gagasan atau penilaian pribadi.' },
+  { subject: 'IPS', question: 'Apa tujuan utama bangsa Eropa mencari jalur laut baru menuju Nusantara?', options: ['Mencari rempah-rempah', 'Mempelajari gunung api', 'Membangun observatorium', 'Menghindari musim dingin'], answer: 0, insight: 'Rempah-rempah sangat bernilai dan menjadi pendorong utama penjelajahan samudra.' },
+]
+
 function Battle({ notify }) {
-  const [phase, setPhase] = useState('ready')
+  const roster = characters.filter((character) => character.owned).slice(0, 4)
+  const [phase, setPhase] = useState('select')
+  const [fighterId, setFighterId] = useState(roster[0].id)
   const [playerHp, setPlayerHp] = useState(100)
   const [enemyHp, setEnemyHp] = useState(100)
-  const [log, setLog] = useState('Pilih jurus pengetahuan untuk memulai duel.')
-  const attack = (type) => {
-    if (phase === 'win') return
-    const damage = type === 'burst' ? 34 : type === 'guard' ? 17 : 25
-    const nextEnemy = Math.max(0, enemyHp - damage)
-    const nextPlayer = Math.max(12, playerHp - (type === 'guard' ? 8 : 14))
-    setEnemyHp(nextEnemy); setPlayerHp(nextPlayer)
-    setLog(type === 'burst' ? 'Jawaban sempurna! Ledakan Wawasan memberi 34 kerusakan.' : type === 'guard' ? 'Benteng Logika meredam serangan balik.' : 'Tebasan Aksara mengenai inti anomali.')
-    if (nextEnemy === 0) { setPhase('win'); notify('Kemenangan! Kamu memperoleh +120 EXP dan 45 Koin Festival.') } else setPhase('fighting')
+  const [round, setRound] = useState(1)
+  const [questionIndex, setQuestionIndex] = useState(0)
+  const [selectedAction, setSelectedAction] = useState(null)
+  const [selectedAnswer, setSelectedAnswer] = useState(null)
+  const [cooldowns, setCooldowns] = useState({ basic: 0, regen: 0, special: 0, ultimate: 0 })
+  const [result, setResult] = useState(null)
+  const fighter = roster.find((character) => character.id === fighterId) ?? roster[0]
+  const question = battleQuestions[questionIndex]
+
+  const startBattle = () => {
+    setPlayerHp(100)
+    setEnemyHp(100)
+    setRound(1)
+    setQuestionIndex(0)
+    setCooldowns({ basic: 0, regen: 0, special: 0, ultimate: 0 })
+    setSelectedAction(null)
+    setSelectedAnswer(null)
+    setResult(null)
+    setPhase('action')
   }
-  const reset = () => { setPlayerHp(100); setEnemyHp(100); setPhase('ready'); setLog('Pilih jurus pengetahuan untuk memulai duel.') }
+
+  const resetBattle = () => {
+    startBattle()
+    setPhase('select')
+  }
+
+  const chooseAction = (action) => {
+    if (cooldowns[action.id] > 0) return
+    setSelectedAction(action)
+    setSelectedAnswer(null)
+    setResult(null)
+    setPhase('question')
+  }
+
+  const resolveAnswer = () => {
+    if (selectedAnswer === null || !selectedAction) return
+    const correct = selectedAnswer === question.answer
+    let nextPlayerHp = playerHp
+    let nextEnemyHp = enemyHp
+    let message
+
+    if (correct) {
+      if (selectedAction.id === 'regen') {
+        const healed = Math.min(24, 100 - playerHp)
+        nextPlayerHp = Math.min(100, playerHp + 24)
+        message = `${selectedAction.name} berhasil. ${fighter.name} memulihkan ${healed} HP.`
+      } else {
+        const damage = selectedAction.id === 'ultimate' ? 45 : selectedAction.id === 'special' ? 30 : 18
+        nextEnemyHp = Math.max(0, enemyHp - damage)
+        message = `${selectedAction.name} aktif dan memberikan ${damage} kerusakan.`
+      }
+    } else {
+      message = `${selectedAction.name} gagal diaktifkan karena jawaban belum tepat.`
+    }
+
+    const counterDamage = nextEnemyHp === 0 ? 0 : correct ? 8 : 16
+    nextPlayerHp = Math.max(0, nextPlayerHp - counterDamage)
+    if (counterDamage) message += ` NULL membalas dengan ${counterDamage} kerusakan.`
+
+    setPlayerHp(nextPlayerHp)
+    setEnemyHp(nextEnemyHp)
+    setCooldowns((current) => {
+      const next = Object.fromEntries(Object.entries(current).map(([key, value]) => [key, Math.max(0, value - 1)]))
+      if (correct && selectedAction.cooldown) next[selectedAction.id] = selectedAction.cooldown
+      return next
+    })
+    setResult({ correct, message, playerHp: nextPlayerHp, enemyHp: nextEnemyHp })
+    setPhase('result')
+  }
+
+  const continueRound = () => {
+    if (result.enemyHp === 0) {
+      setPhase('victory')
+      notify('Kemenangan! +120 EXP dan 45 Koin Festival diperoleh.')
+      return
+    }
+    if (result.playerHp === 0) {
+      setPhase('defeat')
+      return
+    }
+    setRound((value) => value + 1)
+    setQuestionIndex((value) => (value + 1) % battleQuestions.length)
+    setSelectedAction(null)
+    setSelectedAnswer(null)
+    setResult(null)
+    setPhase('action')
+  }
+
+  if (phase === 'select') {
+    return (
+      <div className="arena-select-page">
+        <Panel className="fighter-select-panel" eyebrow="LANGKAH 1 DARI 1" title="Pilih penantangmu">
+          <p className="select-intro">Pilih satu karakter untuk mewakilimu di Arena Konvergensi. Lawan masih berupa simulasi NULL untuk versi prototipe ini.</p>
+          <div className="fighter-select-grid">
+            {roster.map((character) => (
+              <button key={character.id} className={`fighter-select-card ${fighterId === character.id ? 'selected' : ''}`} onClick={() => setFighterId(character.id)}>
+                <PlaceholderArt id={`CHAR_${character.id.toUpperCase()}_BATTLE_01`} label={`Sprite ${character.name}`} tone={character.color} className="select-character-art" badge={character.rarity} />
+                <div className="select-character-copy"><span>{character.role}</span><strong>{character.name}</strong><small>{character.title}</small></div>
+                <div className="select-character-level">Lv. {character.level}</div>
+                {fighterId === character.id && <span className="selected-check"><Check size={15} /> Dipilih</span>}
+              </button>
+            ))}
+          </div>
+        </Panel>
+        <button className="battle-start-button" onClick={startBattle}><Swords size={25} /><span><small>PENANTANG TERPILIH · {fighter.name.toUpperCase()}</small>MULAI BATTLE</span><ArrowRight size={22} /></button>
+      </div>
+    )
+  }
+
   return (
     <div className="battle-page">
-      <div className="battle-topline"><Tag tone="rose">DUEL CERDAS · 1v1</Tag><div><Timer size={17} /> 01:24</div><button className="text-button" onClick={reset}><RotateCcw size={16} /> Ulangi</button></div>
-      <section className="battle-stage game-panel">
-        <PlaceholderArt id="ENV_ARENA_RIFT_01" label="Latar Arena Retakan" tone="arena" className="battle-background" />
-        <div className="fighter fighter-left"><div className="fighter-hud"><div><span>RAKA · Lv. 18</span><strong>Aurelia</strong></div><EmptyPortrait name="Aurelia" tone="gold" /></div><ProgressBar value={playerHp} tone="cyan" /><span className="hp-label">{playerHp} / 100</span><PlaceholderArt id="CHAR_AURELIA_BATTLE_01" label="Sprite Aurelia" tone="gold" className="fighter-art" /></div>
-        <div className="versus-mark"><span>RONDE 2</span><strong>VS</strong></div>
-        <div className="fighter fighter-right"><div className="fighter-hud"><EmptyPortrait name="NULL" tone="corrupt" /><div><span>MANIFESTASI · Lv. 20</span><strong>NULL//ECHO</strong></div></div><ProgressBar value={enemyHp} tone="rose" /><span className="hp-label">{enemyHp} / 100</span><PlaceholderArt id="BOSS_NULL_ECHO_BATTLE_01" label="Sprite NULL//ECHO" tone="corrupt" className="fighter-art" /></div>
-        {phase === 'win' && <div className="victory-banner"><Crown size={28} /><span>KEMENANGAN</span><strong>Pengetahuan memulihkan retakan!</strong></div>}
-      </section>
-      <div className="battle-controls">
-        <Panel className="battle-log"><span className="eyebrow">CATATAN PERTARUNGAN</span><p>{log}</p><div className="energy"><Zap size={16} /> ENERGI <b>7/10</b></div></Panel>
-        <div className="skill-actions"><button onClick={() => attack('strike')} disabled={phase === 'win'}><Sword size={22} /><span><strong>Tebasan Aksara</strong><small>25 daya · 2 energi</small></span></button><button onClick={() => attack('guard')} disabled={phase === 'win'}><ShieldCheck size={22} /><span><strong>Benteng Logika</strong><small>17 daya · Bertahan</small></span></button><button className="ultimate" onClick={() => attack('burst')} disabled={phase === 'win'}><BrainCircuit size={22} /><span><strong>Ledakan Wawasan</strong><small>34 daya · 4 energi</small></span></button></div>
+      <div className="battle-topline">
+        <Tag tone="rose">SIMULASI DUEL · 1V1</Tag>
+        <div className="round-counter"><span>RONDE</span><strong>{String(round).padStart(2, '0')}</strong><i /> <span>SOAL</span><strong>{questionIndex + 1}/{battleQuestions.length}</strong></div>
+        <button className="text-button" onClick={resetBattle}><RotateCcw size={16} /> Ganti karakter</button>
       </div>
+
+      <section className={`combat-stage game-panel phase-${phase}`}>
+        <PlaceholderArt id="ENV_ARENA_RIFT_01" label="Placeholder Background Arena" tone="arena" className="combat-background" badge="GANTI DENGAN BACKGROUND 16:9" />
+        <div className="combat-hud player-hud"><div className="hud-name"><span>RAKA · Lv. {fighter.level}</span><strong>{fighter.name}</strong></div><ProgressBar value={playerHp} tone="cyan" /><small>{playerHp} / 100 HP</small></div>
+        <div className="combat-hud enemy-hud"><div className="hud-name"><span>MANIFESTASI · Lv. 20</span><strong>NULL//ECHO</strong></div><ProgressBar value={enemyHp} tone="rose" /><small>{enemyHp} / 100 HP</small></div>
+        <div className="combatant combatant-player"><PlaceholderArt id={`CHAR_${fighter.id.toUpperCase()}_BATTLE_01`} label={`Sprite ${fighter.name}`} tone={fighter.color} className="combatant-art" /></div>
+        <div className="combatant combatant-enemy"><PlaceholderArt id="BOSS_NULL_ECHO_BATTLE_01" label="Sprite NULL//ECHO" tone="corrupt" className="combatant-art" /></div>
+        <div className="round-seal"><span>RONDE {round}</span><b>VS</b></div>
+        {(phase === 'victory' || phase === 'defeat') && <div className={`battle-end-banner ${phase}`}><Crown size={30} /><span>{phase === 'victory' ? 'KEMENANGAN' : 'DUEL BERAKHIR'}</span><strong>{phase === 'victory' ? 'Pengetahuanmu menstabilkan retakan.' : 'Perkuat pengetahuanmu dan coba lagi.'}</strong><button className="primary-button" onClick={startBattle}>Battle ulang</button></div>}
+      </section>
+
+      {phase === 'action' && (
+        <section className="turn-panel game-panel">
+          <div className="turn-heading"><div><span className="eyebrow">PILIH AKSI</span><h2>Langkahmu, {fighter.name}</h2><p>Setelah memilih aksi, jawab soal dengan benar untuk mengaktifkannya.</p></div><div className="turn-tip"><Zap size={17} /><span><small>ALUR RONDE</small>Aksi → Soal → Eksekusi</span></div></div>
+          <div className="combat-actions">
+            {battleActions.map((action) => {
+              const Icon = action.icon
+              const cooldown = cooldowns[action.id]
+              return <button key={action.id} className={`combat-action action-${action.tone}`} disabled={cooldown > 0} onClick={() => chooseAction(action)}><span className="action-icon"><Icon size={23} /></span><span className="action-copy"><small>{action.short}</small><strong>{action.name}</strong><b>{action.detail}</b></span><span className="action-cooldown">{cooldown > 0 ? <><Clock3 size={14} /> {cooldown} ronde</> : action.cooldown ? `CD ${action.cooldown}` : 'Tanpa CD'}</span></button>
+            })}
+          </div>
+        </section>
+      )}
+
+      {(phase === 'question' || phase === 'result') && (
+        <section className="question-turn-panel game-panel">
+          <div className="question-topline"><div><Tag tone="cyan">{question.subject}</Tag><span>Soal {questionIndex + 1} dari {battleQuestions.length}</span></div><div className={`queued-action action-${selectedAction.tone}`}><selectedAction.icon size={17} /><span><small>AKSI DISIAPKAN</small><b>{selectedAction.name}</b></span></div></div>
+          <h2>{question.question}</h2>
+          <div className="battle-answer-grid">
+            {question.options.map((option, index) => {
+              const revealed = phase === 'result'
+              const state = revealed && index === question.answer ? 'correct' : revealed && index === selectedAnswer ? 'wrong' : selectedAnswer === index ? 'selected' : ''
+              return <button key={option} className={state} disabled={revealed} onClick={() => setSelectedAnswer(index)}><span>{String.fromCharCode(65 + index)}</span><b>{option}</b>{revealed && index === question.answer && <Check size={18} />}</button>
+            })}
+          </div>
+          {phase === 'question' ? <button className="primary-button answer-confirm" disabled={selectedAnswer === null} onClick={resolveAnswer}>Kunci jawaban & aktifkan aksi <ArrowRight size={17} /></button> : <div className={`answer-result ${result.correct ? 'correct' : 'wrong'}`}><div>{result.correct ? <Check size={22} /> : <CircleHelp size={22} />}<span><strong>{result.correct ? 'Jawaban benar—aksi berhasil!' : 'Jawaban belum tepat—aksi gagal.'}</strong><p>{result.message}</p><small>{question.insight}</small></span></div><button className="secondary-button" onClick={continueRound}>{result.enemyHp === 0 || result.playerHp === 0 ? 'Lihat hasil duel' : 'Lanjut ke ronde berikutnya'} <ArrowRight size={16} /></button></div>}
+        </section>
+      )}
     </div>
   )
 }
